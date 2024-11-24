@@ -13,6 +13,7 @@ export async function POST(request) {
         { error: 'API key not configured' },
         { status: 500 }
       );
+      
     }
 
     const response = await fetch(apiUrl, {
