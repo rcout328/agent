@@ -5,24 +5,37 @@ const groq = new Groq({
   dangerouslyAllowBrowser: true
 });
 
-export async function callGroqApi(messages) {
+export const callGroqApi = async (messages) => {
   try {
-    if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_GROQ_API_KEY) {
-      console.warn('Warning: Using fallback API key in browser environment');
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.groq.com/openai/v1/chat/completions';
+    const apiKey = process.env.NEXT_PUBLIC_GROQ_API_KEY;
+
+    if (!apiKey) {
+      throw new Error('GROQ API key not found');
     }
 
-    const completion = await groq.chat.completions.create({
-      messages: messages,
-      model: "llama-3.1-70b-versatile",
-      temperature: 0.7,
-      max_tokens: 4000,
-      top_p: 1,
-      stream: false,
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'mixtral-8x7b-32768',
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 4096,
+      }),
     });
 
-    return completion.choices[0].message.content;
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
   } catch (error) {
-    console.error('Error calling Groq API:', error);
+    console.error('Error calling GROQ API:', error);
     throw error;
   }
-} 
+}; 
