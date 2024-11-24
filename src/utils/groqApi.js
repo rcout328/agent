@@ -17,7 +17,7 @@ export const callGroqApi = async (messages) => {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'mixtral-8x7b-32768',
+        model: 'llama-3.1-70b-versatile',
         messages: messages,
         temperature: 0.7,
         max_tokens: 4096,
