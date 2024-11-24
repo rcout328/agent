@@ -2,6 +2,13 @@
 const nextConfig = {
   output: 'standalone',
   trailingSlash: true,
+  images: {
+    unoptimized: true,
+  },
+  webpack: (config) => {
+    config.resolve.fallback = { fs: false };
+    return config;
+  },
   async rewrites() {
     return [
       {
