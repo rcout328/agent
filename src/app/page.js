@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStoredInput } from '@/hooks/useStoredInput';
-import StartupChatbot from '@/components/StartupChatbot';
+import StartupChatbot from '@/Components/StartupChatbot';
 
 export default function Home() {
   const [userInput, setUserInput] = useStoredInput();

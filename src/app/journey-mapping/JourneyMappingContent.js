@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useStoredInput } from '@/hooks/useStoredInput';
 import { callGroqApi } from '@/utils/groqApi';
-import ChatDialog from '@/components/ChatDialog';
+import ChatDialog from '@/Components/ChatDialog';
 import jsPDF from 'jspdf';
 import { useRouter } from 'next/navigation';
 

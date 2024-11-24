@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useStoredInput } from '@/hooks/useStoredInput';
 import { callGroqApi } from '@/utils/groqApi';
-import ChatDialog from '@/components/ChatDialog';
+import ChatDialog from '@/Components/ChatDialog';
 import jsPDF from 'jspdf';
 
 // Remove the helper function for PDF section titles
