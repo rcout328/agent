@@ -32,53 +32,45 @@ export default function Sidebar() {
   ];
 
   return (
-    <div style={{ width: '256px', minHeight: '100vh', background: 'linear-gradient(to bottom, #1D1D1F, #131314)', color: 'white', padding: '24px', borderRight: '1px solid #1D1D1F', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}>
+    <div className="w-64 min-h-screen bg-gradient-to-b from-[#1D1D1F] to-[#131314] text-white p-6 border-r border-[#1D1D1F] shadow-lg">
       {/* Search Bar */}
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{ position: 'relative' }}>
+      <div className="mb-8">
+        <div className="relative">
           <input
             type="search"
             placeholder="Search..."
-            style={{ width: '100%', background: '#1D1D1F', color: '#D1D5DB', borderRadius: '12px', paddingLeft: '16px', paddingRight: '32px', paddingTop: '10px', paddingBottom: '10px', fontSize: '14px', outline: 'none', border: 'none' }}
+            className="w-full bg-[#1D1D1F] text-gray-300 rounded-xl pl-4 pr-8 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
           />
-          <span style={{ position: 'absolute', right: '12px', top: '10px', color: '#9CA3AF' }}>🔍</span>
+          <span className="absolute right-3 top-2.5 text-gray-500">🔍</span>
         </div>
       </div>
 
       {/* Navigation Sections */}
       {menuItems.map((section, index) => (
-        <div key={index} style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: '600', letterSpacing: '0.1em', marginBottom: '8px', paddingLeft: '8px', paddingRight: '8px' }}>
+        <div key={index} className="mb-6">
+          <h2 className="text-xs text-gray-400 font-semibold tracking-wider mb-2 px-2">
             {section.title}
           </h2>
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <nav className="space-y-1">
             {section.items.map((item, itemIndex) => (
               <Link
                 key={itemIndex}
                 href={item.path}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '10px 12px',
-                  borderRadius: '12px',
-                  transition: 'all 0.2s',
-                  backgroundColor: pathname === item.path ? '#6B46C1' : 'transparent',
-                  color: pathname === item.path ? 'white' : '#9CA3AF',
-                  textDecoration: 'none'
-                }}
+                className={`flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 ${
+                  pathname === item.path
+                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
+                    : 'text-gray-400 hover:bg-[#1D1D1F] hover:text-white'
+                }`}
               >
-                <span style={{ fontSize: '24px', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span className="text-xl w-8 h-6 flex items-center justify-center">
                   {item.icon}
                 </span>
-                <span style={{ fontSize: '14px', fontWeight: '500' }}>{item.name}</span>
+                <span className="text-sm font-medium ml-3">{item.name}</span>
               </Link>
             ))}
           </nav>
         </div>
       ))}
-
-      {/* User Profile */}
-    
     </div>
   );
 } 
