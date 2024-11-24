@@ -4,7 +4,7 @@ export default function AgentChatInterface() {
   return (
     <div className="w-full h-screen">
       <iframe
-        src="http://127.0.0.1:7860/?__theme=dark"
+        src="https://varun324242-agent.hf.space"
         className="w-full h-full"
         title="AI Agent Interface"
         style={{ 
