@@ -9,12 +9,12 @@ const nextConfig = {
     config.resolve.fallback = { fs: false };
     return config;
   },
-  // Add this to ensure proper CSS processing
-  experimental: {
-    optimizeCss: true,
-  },
   async rewrites() {
     return [
+      {
+        source: '/:path*',
+        destination: '/:path*',
+      },
       {
         source: '/',
         destination: '/page',
