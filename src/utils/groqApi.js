@@ -1,18 +1,14 @@
 import Groq from "groq-sdk";
 
 const groq = new Groq({
-  apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY || "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",
+  apiKey: "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", // Direct API key without using env variables
   dangerouslyAllowBrowser: true
 });
 
 export const callGroqApi = async (messages) => {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.groq.com/openai/v1/chat/completions';
-    const apiKey = process.env.NEXT_PUBLIC_GROQ_API_KEY;
-
-    if (!apiKey) {
-      throw new Error('GROQ API key not found');
-    }
+    const apiUrl = 'https://api.groq.com/openai/v1/chat/completions'; // Direct API URL without using env variables
+    const apiKey = "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"; // Direct API key without using env variables
 
     const response = await fetch(apiUrl, {
       method: 'POST',
