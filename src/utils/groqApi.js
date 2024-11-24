@@ -20,7 +20,7 @@ export const callGroqApi = async (messages) => {
         model: 'llama-3.1-70b-versatile',
         messages: messages,
         temperature: 0.7,
-        max_tokens: 4096,
+        max_tokens: 25000,
       }),
     });
 
