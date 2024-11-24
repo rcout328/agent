@@ -1,17 +1,21 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { socket, safeEmit, checkConnection } from '@/config/socket';
+import { useState, useEffect, useRef } from 'react';
 import { useStoredInput } from '@/hooks/useStoredInput';
+import { callGroqApi } from '@/utils/groqApi';
+import ChatDialog from '@/components/ChatDialog';
+import jsPDF from 'jspdf';
 
 export default function ICPCreationContent() {
   const [userInput, setUserInput] = useStoredInput();
   const [icpAnalysis, setIcpAnalysis] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [mounted, setMounted] = useState(false);
   const [lastAnalyzedInput, setLastAnalyzedInput] = useState('');
+
+  // Add refs for PDF content
+  const analysisRef = useRef(null);
 
   // Load stored analysis on mount and when userInput changes
   useEffect(() => {
@@ -24,60 +28,12 @@ export default function ICPCreationContent() {
     } else {
       setIcpAnalysis('');
       // Auto-submit only if input is different from last analyzed
-      if (isConnected && mounted && userInput && !isLoading && userInput !== lastAnalyzedInput) {
+      if (mounted && userInput && !isLoading && userInput !== lastAnalyzedInput) {
         handleSubmit(new Event('submit'));
         setLastAnalyzedInput(userInput);
       }
     }
-  }, [userInput, isConnected, mounted]);
-
-  useEffect(() => {
-    const handleConnect = () => {
-      console.log('Connected to server');
-      setIsConnected(true);
-      setError(null);
-    };
-
-    const handleDisconnect = () => {
-      console.log('Disconnected from server');
-      setIsConnected(false);
-    };
-
-    const handleReceiveMessage = (data) => {
-      console.log('Received message:', data);
-      setIsLoading(false);
-      
-      if (data.type === 'error') {
-        setError(data.content);
-        return;
-      }
-
-      if (data.analysisType === 'icp') {
-        const analysisResult = data.content;
-        setIcpAnalysis(analysisResult);
-        // Store the analysis result and update last analyzed input
-        localStorage.setItem(`icpAnalysis_${userInput}`, analysisResult);
-        setLastAnalyzedInput(userInput);
-      }
-    };
-
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
-    socket.on('receive_message', handleReceiveMessage);
-    socket.on('connect_error', (error) => {
-      console.error('Connection error:', error);
-      setError('Connection error. Retrying...');
-    });
-
-    setIsConnected(checkConnection());
-
-    return () => {
-      socket.off('connect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
-      socket.off('receive_message', handleReceiveMessage);
-      socket.off('connect_error');
-    };
-  }, [userInput]);
+  }, [userInput, mounted]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -94,57 +50,125 @@ export default function ICPCreationContent() {
     setError(null);
 
     try {
-      await safeEmit('send_message', {
-        message: `Create a detailed Ideal Customer Profile (ICP) for this business: ${userInput}. 
-        Please analyze and provide:
-        1. Demographics
-           - Age range
-           - Income level
-           - Location
-           - Education
-        2. Psychographics
-           - Values and beliefs
-           - Lifestyle
-           - Interests
-           - Behaviors
-        3. Professional Characteristics
-           - Industry
-           - Company size
-           - Role/Position
-           - Decision-making authority
-        4. Pain Points & Needs
-           - Key challenges
-           - Motivations
-           - Goals
-           - Purchase triggers`,
-        agent: 'MarketInsightCEO',
-        analysisType: 'icp'
-      });
+      const response = await callGroqApi([
+        {
+          role: "system",
+          content: `You are an expert at creating Ideal Customer Profiles (ICP). Create a detailed ICP analysis that covers all key aspects of the target customer. Focus on providing specific, actionable insights.`
+        },
+        {
+          role: "user",
+          content: `Create a detailed Ideal Customer Profile (ICP) for this business: ${userInput}. 
+          Please analyze and provide:
+          1. Demographics
+             - Age range
+             - Income level
+             - Location
+             - Education
+          2. Psychographics
+             - Values and beliefs
+             - Lifestyle
+             - Interests
+             - Behaviors
+          3. Professional Characteristics
+             - Industry
+             - Company size
+             - Role/Position
+             - Decision-making authority
+          4. Pain Points & Needs
+             - Key challenges
+             - Motivations
+             - Goals
+             - Purchase triggers
+          
+          Format the response in a clear, structured manner with specific details and insights.`
+        }
+      ]);
 
+      setIcpAnalysis(response);
+      localStorage.setItem(`icpAnalysis_${userInput}`, response);
+      setLastAnalyzedInput(userInput);
     } catch (error) {
-      console.error('Error sending message:', error);
-      setError('Failed to send analysis request. Please try again.');
+      console.error('Error:', error);
+      setError('Failed to get analysis. Please try again.');
+    } finally {
       setIsLoading(false);
     }
   };
 
-  // Don't render until mounted to prevent hydration issues
-  if (!mounted) {
-    return null;
-  }
+  // Add export function
+  const exportToPDF = async () => {
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      let currentY = margin;
+
+      // Add title
+      pdf.setFontSize(20);
+      pdf.setTextColor(0, 102, 204);
+      pdf.text('Ideal Customer Profile (ICP) Report', pageWidth / 2, currentY, { align: 'center' });
+      currentY += 15;
+
+      // Add business name
+      pdf.setFontSize(12);
+      pdf.setTextColor(0, 0, 0);
+      const businessName = userInput.substring(0, 50);
+      pdf.text(`Business: ${businessName}${userInput.length > 50 ? '...' : ''}`, margin, currentY);
+      currentY += 20;
+
+      // Add full ICP Analysis text without sections
+      pdf.setFontSize(11);
+      const analysisLines = pdf.splitTextToSize(icpAnalysis || 'No analysis available.', pageWidth - (2 * margin));
+      for (const line of analysisLines) {
+        if (currentY + 10 > pageHeight - margin) {
+          pdf.addPage();
+          currentY = margin;
+        }
+        pdf.text(line, margin, currentY);
+        currentY += 10;
+      }
+
+      // Add footer to all pages
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(128, 128, 128);
+        // Add page numbers
+        pdf.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+        // Add confidentiality notice
+        pdf.text('Confidential - ICP Analysis Report', pageWidth / 2, pageHeight - 10, { align: 'center' });
+      }
+
+      // Save the PDF
+      pdf.save('icp-analysis-report.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setError('Failed to generate PDF. Please try again.');
+    }
+  };
+
+  if (!mounted) return null;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <header className="text-center mb-8">
+        <header className="text-center mb-8 relative">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             Ideal Customer Profile Creation
           </h1>
-          <div className="text-sm text-gray-500">
-            {isConnected ? 
-              <span className="text-green-500">●</span> : 
-              <span className="text-red-500">●</span>
-            } {isConnected ? 'Connected' : 'Disconnected'}
+          <div className="absolute right-0 top-0 flex space-x-2">
+            {icpAnalysis && (
+              <button
+                onClick={exportToPDF}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+              >
+                <span>📥</span>
+                <span>Export PDF</span>
+              </button>
+            )}
+            <ChatDialog currentPage="icpCreation" />
           </div>
         </header>
 
@@ -157,14 +181,14 @@ export default function ICPCreationContent() {
                 onChange={(e) => setUserInput(e.target.value)}
                 placeholder="Enter your business details for ICP creation..."
                 className="w-full p-4 border rounded-lg focus:ring-2 focus:ring-blue-500 h-32 resize-none text-black"
-                disabled={!isConnected || isLoading}
+                disabled={isLoading}
               />
             </div>
             <button
               type="submit"
-              disabled={!isConnected || isLoading}
+              disabled={isLoading || !userInput.trim()}
               className={`w-full p-4 rounded-lg font-medium transition-colors ${
-                isConnected && !isLoading
+                !isLoading && userInput.trim()
                   ? 'bg-blue-500 hover:bg-blue-600 text-white'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
@@ -177,7 +201,7 @@ export default function ICPCreationContent() {
         {/* Analysis Results */}
         <div className="grid md:grid-cols-1 gap-6">
           {/* ICP Analysis Box */}
-          <div className="bg-white rounded-xl shadow-xl p-6">
+          <div ref={analysisRef} className="bg-white rounded-xl shadow-xl p-6">
             <h2 className="text-2xl font-semibold mb-4 text-gray-700 flex items-center">
               <span className="mr-2">👥</span> Ideal Customer Profile
             </h2>

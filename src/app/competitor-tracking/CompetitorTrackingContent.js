@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { socket, safeEmit, checkConnection } from '@/config/socket';
+import { useState, useEffect, useRef } from 'react';
 import { useStoredInput } from '@/hooks/useStoredInput';
 import { Line, Bar, Radar } from 'react-chartjs-2';
+import { callGroqApi } from '@/utils/groqApi';
+import ChatDialog from '@/components/ChatDialog';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -17,6 +18,8 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // Register ChartJS components
 ChartJS.register(
@@ -32,15 +35,38 @@ ChartJS.register(
   Filler
 );
 
+// Add helper functions at the top level
+const formatDate = (date) => {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+};
+
+const addSectionTitle = (pdf, title, yPosition) => {
+  pdf.setFontSize(14);
+  pdf.setTextColor(0, 0, 0);
+  pdf.setFont(undefined, 'bold');
+  pdf.text(title, 15, yPosition);
+  pdf.setFont(undefined, 'normal');
+  return yPosition + 10;
+};
+
 export default function CompetitorTrackingContent() {
   const [userInput, setUserInput] = useStoredInput();
   const [competitorAnalysis, setCompetitorAnalysis] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
+  const [competitorData, setCompetitorData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [mounted, setMounted] = useState(false);
   const [lastAnalyzedInput, setLastAnalyzedInput] = useState('');
-  const [competitorData, setCompetitorData] = useState(null);
+
+  // Add refs for PDF content
+  const chartsRef = useRef(null);
+  const analysisRef = useRef(null);
 
   // Load stored analysis on mount and when userInput changes
   useEffect(() => {
@@ -49,65 +75,18 @@ export default function CompetitorTrackingContent() {
     
     if (storedAnalysis) {
       setCompetitorAnalysis(storedAnalysis);
-      setLastAnalyzedInput(userInput); // Track this input as analyzed
+      setCompetitorData(parseCompetitorData(storedAnalysis));
+      setLastAnalyzedInput(userInput);
     } else {
       setCompetitorAnalysis('');
+      setCompetitorData(null);
       // Auto-submit only if input is different from last analyzed
-      if (isConnected && mounted && userInput && !isLoading && userInput !== lastAnalyzedInput) {
+      if (mounted && userInput && !isLoading && userInput !== lastAnalyzedInput) {
         handleSubmit(new Event('submit'));
-        setLastAnalyzedInput(userInput); // Update last analyzed input
-      }
-    }
-  }, [userInput, isConnected, mounted]); // Dependencies include connection status
-
-  useEffect(() => {
-    const handleConnect = () => {
-      console.log('Connected to server');
-      setIsConnected(true);
-      setError(null);
-    };
-
-    const handleDisconnect = () => {
-      console.log('Disconnected from server');
-      setIsConnected(false);
-    };
-
-    const handleReceiveMessage = (data) => {
-      console.log('Received message:', data);
-      setIsLoading(false);
-      
-      if (data.type === 'error') {
-        setError(data.content);
-        return;
-      }
-
-      if (data.analysisType === 'competitor') {
-        const analysisResult = data.content;
-        setCompetitorAnalysis(analysisResult);
-        const parsedData = parseCompetitorData(analysisResult);
-        setCompetitorData(parsedData);
-        localStorage.setItem(`competitorAnalysis_${userInput}`, analysisResult);
         setLastAnalyzedInput(userInput);
       }
-    };
-
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
-    socket.on('receive_message', handleReceiveMessage);
-    socket.on('connect_error', (error) => {
-      console.error('Connection error:', error);
-      setError('Connection error. Retrying...');
-    });
-
-    setIsConnected(checkConnection());
-
-    return () => {
-      socket.off('connect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
-      socket.off('receive_message', handleReceiveMessage);
-      socket.off('connect_error');
-    };
-  }, [userInput]);
+    }
+  }, [userInput, mounted]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -117,43 +96,47 @@ export default function CompetitorTrackingContent() {
     const storedAnalysis = localStorage.getItem(`competitorAnalysis_${userInput}`);
     if (storedAnalysis && userInput === lastAnalyzedInput) {
       setCompetitorAnalysis(storedAnalysis);
-      return; // Don't proceed with API call if we have stored results for this input
+      setCompetitorData(parseCompetitorData(storedAnalysis));
+      return;
     }
 
     setIsLoading(true);
     setError(null);
 
     try {
-      await safeEmit('send_message', {
-        message: `Perform a comprehensive competitor analysis for this business: ${userInput}. 
-        Please analyze:
-        1. Direct Competitors
-           - Key market players
-           - Market share analysis
-           - Competitive positioning
-           - Core offerings
-        2. Competitor Strengths
-           - Unique selling propositions
-           - Market advantages
-           - Resource capabilities
-           - Brand reputation
-        3. Competitor Weaknesses
-           - Service gaps
-           - Market limitations
-           - Operational challenges
-           - Customer pain points
-        4. Strategic Analysis
-           - Pricing strategies
-           - Marketing approaches
-           - Distribution channels
-           - Growth tactics`,
-        agent: 'MarketInsightCEO',
-        analysisType: 'competitor'
-      });
+      const response = await callGroqApi([
+        {
+          role: "system",
+          content: `You are a competitive analysis expert. Analyze competitors and provide detailed insights with specific numbers and percentages that can be visualized. Focus on providing clear, quantifiable data points for market shares and competitive positioning.`
+        },
+        {
+          role: "user",
+          content: `Perform a detailed competitor analysis for the business: ${userInput}. 
+          Please analyze and provide insights on the following aspects:
+          1. Direct Competitors
+          • Identify key players in the market and their competitive positioning.
+          • Assess their market share (provide specific percentages) and core offerings.
+          2. Competitor Strengths
+          • Highlight unique selling propositions, market advantages, resource capabilities, and brand reputation.
+          3. Competitor Weaknesses
+          • Identify service gaps, operational challenges, market limitations, and common customer pain points.
+          4. Strategic Analysis
+          • Evaluate pricing strategies, marketing approaches, distribution channels, and growth tactics.
 
+          Important: Include specific percentages for market shares and competitive metrics that can be used for visualization.
+          Format market share data as "CompanyName has XX%" for easy parsing.`
+        }
+      ]);
+
+      setCompetitorAnalysis(response);
+      const parsedData = parseCompetitorData(response);
+      setCompetitorData(parsedData);
+      localStorage.setItem(`competitorAnalysis_${userInput}`, response);
+      setLastAnalyzedInput(userInput);
     } catch (error) {
-      console.error('Error sending message:', error);
-      setError('Failed to send analysis request. Please try again.');
+      console.error('Error:', error);
+      setError('Failed to get analysis. Please try again.');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -163,10 +146,6 @@ export default function CompetitorTrackingContent() {
     try {
       // Extract competitor names and market share percentages
       const competitors = content.match(/(\w+(?:\s+\w+)*)\s*(?:has|with|at)\s*(\d+(?:\.\d+)?)\s*%/gi);
-      const strengthsMatches = content.match(/strengths?[:\s-]+([^.!?\n]+)/gi);
-      const weaknessesMatches = content.match(/weaknesses?[:\s-]+([^.!?\n]+)/gi);
-
-      // Market Share Data
       const marketShareData = {
         labels: [],
         datasets: [{
@@ -198,28 +177,7 @@ export default function CompetitorTrackingContent() {
         });
       }
 
-      // Competitive Analysis Radar Data
-      const radarData = {
-        labels: ['Market Share', 'Brand Strength', 'Innovation', 'Customer Service', 'Price Competitiveness'],
-        datasets: competitors ? competitors.map((comp, index) => ({
-          label: marketShareData.labels[index],
-          data: [
-            marketShareData.datasets[0].data[index],
-            Math.random() * 100,
-            Math.random() * 100,
-            Math.random() * 100,
-            Math.random() * 100,
-          ],
-          backgroundColor: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.2)`,
-          borderColor: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 1)`,
-          borderWidth: 1,
-        })) : [],
-      };
-
-      return {
-        marketShare: marketShareData,
-        competitiveAnalysis: radarData,
-      };
+      return marketShareData;
     } catch (error) {
       console.error('Error parsing competitor data:', error);
       return null;
@@ -265,6 +223,99 @@ export default function CompetitorTrackingContent() {
     },
   };
 
+  // Add PDF generation function
+  const generatePDF = async () => {
+    try {
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      let currentY = margin;
+
+      // Add title
+      pdf.setFontSize(20);
+      pdf.setTextColor(0, 102, 204);
+      pdf.text('Competitor Analysis Report', pageWidth / 2, currentY, { align: 'center' });
+      currentY += 15;
+
+      // Add business name
+      pdf.setFontSize(12);
+      pdf.setTextColor(0, 0, 0);
+      const businessName = userInput.substring(0, 50);
+      pdf.text(`Business: ${businessName}${userInput.length > 50 ? '...' : ''}`, margin, currentY);
+      currentY += 20;
+
+      // Add executive summary
+      currentY = addSectionTitle(pdf, '1. Executive Summary', currentY);
+      pdf.setFontSize(11);
+      const summaryText = "This report provides a comprehensive analysis of your competitors, including market share distribution, competitive positioning, and strategic insights.";
+      const summaryLines = pdf.splitTextToSize(summaryText, pageWidth - (2 * margin));
+      pdf.text(summaryLines, margin, currentY);
+      currentY += (summaryLines.length * 7) + 10;
+
+      // Add competitor analysis section
+      currentY = addSectionTitle(pdf, '2. Detailed Competitor Analysis', currentY);
+      if (competitorAnalysis) {
+        pdf.setFontSize(10);
+        const analysisLines = pdf.splitTextToSize(competitorAnalysis, pageWidth - (2 * margin));
+        
+        // Check if we need a new page
+        if (currentY + (analysisLines.length * 5) > pageHeight - margin) {
+          pdf.addPage();
+          currentY = margin;
+        }
+        
+        pdf.text(analysisLines, margin, currentY);
+        currentY += analysisLines.length * 5 + 15;
+      }
+
+      // Add market share visualization
+      if (chartsRef.current && competitorData) {
+        if (currentY + 100 > pageHeight - margin) {
+          pdf.addPage();
+          currentY = margin;
+        }
+
+        currentY = addSectionTitle(pdf, '3. Market Share Visualization', currentY);
+        const chartsCanvas = await html2canvas(chartsRef.current);
+        const chartsImage = chartsCanvas.toDataURL('image/png');
+        const chartsAspectRatio = chartsCanvas.width / chartsCanvas.height;
+        const chartsWidth = pageWidth - (2 * margin);
+        const chartsHeight = chartsWidth / chartsAspectRatio;
+
+        pdf.addImage(chartsImage, 'PNG', margin, currentY + 5, chartsWidth, chartsHeight);
+        currentY += chartsHeight + 15;
+      }
+
+      // Add recommendations section
+      if (currentY + 40 > pageHeight - margin) {
+        pdf.addPage();
+        currentY = margin;
+      }
+
+      currentY = addSectionTitle(pdf, '4. Strategic Recommendations', currentY);
+      const recommendationsText = "Based on the competitive analysis, we recommend focusing on differentiating factors and addressing identified market gaps to strengthen your competitive position.";
+      const recLines = pdf.splitTextToSize(recommendationsText, pageWidth - (2 * margin));
+      pdf.text(recLines, margin, currentY + 5);
+
+      // Add footer to all pages
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(128, 128, 128);
+        pdf.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+        pdf.text('Confidential - Competitor Analysis Report', pageWidth / 2, pageHeight - 10, { align: 'center' });
+      }
+
+      // Save the PDF
+      pdf.save('competitor_analysis_report.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setError('Failed to generate PDF. Please try again.');
+    }
+  };
+
   // Don't render until mounted to prevent hydration issues
   if (!mounted) {
     return null;
@@ -273,15 +324,21 @@ export default function CompetitorTrackingContent() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <header className="text-center mb-8">
+        <header className="text-center mb-8 relative">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             Competitor Tracking Analysis
           </h1>
-          <div className="text-sm text-gray-500">
-            {isConnected ? 
-              <span className="text-green-500">●</span> : 
-              <span className="text-red-500">●</span>
-            } {isConnected ? 'Connected' : 'Disconnected'}
+          <div className="absolute right-0 top-0 flex space-x-2">
+            {competitorAnalysis && (
+              <button
+                onClick={generatePDF}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+              >
+                <span>📥</span>
+                <span>Export PDF</span>
+              </button>
+            )}
+            <ChatDialog currentPage="competitorTracking" />
           </div>
         </header>
 
@@ -294,14 +351,14 @@ export default function CompetitorTrackingContent() {
                 onChange={(e) => setUserInput(e.target.value)}
                 placeholder="Enter your business details for competitor analysis..."
                 className="w-full p-4 border rounded-lg focus:ring-2 focus:ring-blue-500 h-32 resize-none text-black"
-                disabled={!isConnected || isLoading}
+                disabled={isLoading}
               />
             </div>
             <button
               type="submit"
-              disabled={!isConnected || isLoading}
+              disabled={isLoading || !userInput.trim()}
               className={`w-full p-4 rounded-lg font-medium transition-colors ${
-                isConnected && !isLoading
+                !isLoading && userInput.trim()
                   ? 'bg-blue-500 hover:bg-blue-600 text-white'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
@@ -341,22 +398,27 @@ export default function CompetitorTrackingContent() {
 
         {/* Competitor Visualization Section */}
         {competitorData && (
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div ref={chartsRef} className="grid md:grid-cols-2 gap-6 mb-8">
             {/* Market Share Chart */}
             <div className="bg-white rounded-xl shadow-xl p-6">
               <div className="h-[400px]">
-                <Bar options={barOptions} data={competitorData.marketShare} />
+                <Bar options={barOptions} data={competitorData} />
               </div>
             </div>
 
             {/* Competitive Analysis Radar */}
             <div className="bg-white rounded-xl shadow-xl p-6">
               <div className="h-[400px]">
-                <Radar options={radarOptions} data={competitorData.competitiveAnalysis} />
+                <Radar options={radarOptions} data={competitorData} />
               </div>
             </div>
           </div>
         )}
+
+        {/* Analysis section with ref */}
+        <div ref={analysisRef} className="bg-white rounded-xl shadow-xl p-6">
+          {/* Your existing analysis content... */}
+        </div>
       </div>
     </main>
   );

@@ -1,13 +1,24 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { socket, safeEmit, checkConnection } from '@/config/socket';
 import { useStoredInput } from '@/hooks/useStoredInput';
+import { callGroqApi } from '@/utils/groqApi';
+import ChatDialog from '@/components/ChatDialog';
+import jsPDF from 'jspdf';
+
+// Remove the helper function for PDF section titles
+// const addSectionTitle = (pdf, title, yPosition) => {
+//   pdf.setFontSize(14);
+//   pdf.setTextColor(0, 0, 0);
+//   pdf.setFont(undefined, 'bold');
+//   pdf.text(title, 15, yPosition);
+//   pdf.setFont(undefined, 'normal');
+//   return yPosition + 10;
+// };
 
 export default function FeaturePriorityContent() {
   const [userInput, setUserInput] = useStoredInput();
   const [featureAnalysis, setFeatureAnalysis] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [mounted, setMounted] = useState(false);
@@ -20,64 +31,16 @@ export default function FeaturePriorityContent() {
     
     if (storedAnalysis) {
       setFeatureAnalysis(storedAnalysis);
-      setLastAnalyzedInput(userInput); // Track this input as analyzed
+      setLastAnalyzedInput(userInput);
     } else {
       setFeatureAnalysis('');
       // Auto-submit only if input is different from last analyzed
-      if (isConnected && mounted && userInput && !isLoading && userInput !== lastAnalyzedInput) {
+      if (mounted && userInput && !isLoading && userInput !== lastAnalyzedInput) {
         handleSubmit(new Event('submit'));
-        setLastAnalyzedInput(userInput); // Update last analyzed input
-      }
-    }
-  }, [userInput, isConnected, mounted]);
-
-  useEffect(() => {
-    const handleConnect = () => {
-      console.log('Connected to server');
-      setIsConnected(true);
-      setError(null);
-    };
-
-    const handleDisconnect = () => {
-      console.log('Disconnected from server');
-      setIsConnected(false);
-    };
-
-    const handleReceiveMessage = (data) => {
-      console.log('Received message:', data);
-      setIsLoading(false);
-      
-      if (data.type === 'error') {
-        setError(data.content);
-        return;
-      }
-
-      if (data.analysisType === 'feature') {
-        const analysisResult = data.content;
-        setFeatureAnalysis(analysisResult);
-        // Store the analysis result and update last analyzed input
-        localStorage.setItem(`featureAnalysis_${userInput}`, analysisResult);
         setLastAnalyzedInput(userInput);
       }
-    };
-
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
-    socket.on('receive_message', handleReceiveMessage);
-    socket.on('connect_error', (error) => {
-      console.error('Connection error:', error);
-      setError('Connection error. Retrying...');
-    });
-
-    setIsConnected(checkConnection());
-
-    return () => {
-      socket.off('connect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
-      socket.off('receive_message', handleReceiveMessage);
-      socket.off('connect_error');
-    };
-  }, [userInput]);
+    }
+  }, [userInput, mounted]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -87,63 +50,130 @@ export default function FeaturePriorityContent() {
     const storedAnalysis = localStorage.getItem(`featureAnalysis_${userInput}`);
     if (storedAnalysis && userInput === lastAnalyzedInput) {
       setFeatureAnalysis(storedAnalysis);
-      return; // Don't proceed with API call if we have stored results for this input
+      return;
     }
 
     setIsLoading(true);
     setError(null);
 
     try {
-      await safeEmit('send_message', {
-        message: `Analyze feature priorities for this business: ${userInput}. 
-        Please provide:
-        1. Core Features
-           - Essential functionalities
-           - Must-have features
-           - Core user requirements
-           - Basic capabilities
-        2. Priority Assessment
-           - Feature importance ranking
-           - User impact analysis
-           - Development complexity
-           - Resource requirements
-        3. Implementation Timeline
-           - Development phases
-           - Feature dependencies
-           - Resource allocation
-           - Milestone planning
-        4. Success Metrics
-           - Performance indicators
-           - User adoption metrics
-           - Impact measurement
-           - ROI assessment`,
-        agent: 'MarketInsightCEO',
-        analysisType: 'feature'
-      });
+      const response = await callGroqApi([
+        {
+          role: "system",
+          content: `You are a feature prioritization expert. Create a detailed feature priority analysis that covers all key aspects of product features. Focus on providing specific, actionable insights about feature importance and implementation strategy.`
+        },
+        {
+          role: "user",
+          content: `Analyze feature priorities for this business: ${userInput}. 
+          Please provide:
+          1. Core Features
+             - Essential functionalities
+             - Must-have features
+             - Core user requirements
+             - Basic capabilities
+          2. Priority Assessment
+             - Feature importance ranking
+             - User impact analysis
+             - Development complexity
+             - Resource requirements
+          3. Implementation Timeline
+             - Development phases
+             - Feature dependencies
+             - Resource allocation
+             - Milestone planning
+          4. Success Metrics
+             - Performance indicators
+             - User adoption metrics
+             - Impact measurement
+             - ROI assessment
+          
+          Format the response in a clear, structured manner with specific details for each component.`
+        }
+      ]);
 
+      setFeatureAnalysis(response);
+      localStorage.setItem(`featureAnalysis_${userInput}`, response);
+      setLastAnalyzedInput(userInput);
     } catch (error) {
-      console.error('Error sending message:', error);
-      setError('Failed to send analysis request. Please try again.');
+      console.error('Error:', error);
+      setError('Failed to get analysis. Please try again.');
+    } finally {
       setIsLoading(false);
     }
   };
 
-  if (!mounted) {
-    return null;
-  }
+  // Add PDF generation function
+  const generatePDF = async () => {
+    try {
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      let currentY = margin;
+
+      // Add title
+      pdf.setFontSize(20);
+      pdf.setTextColor(0, 102, 204);
+      pdf.text('Feature Priority Analysis Report', pageWidth / 2, currentY, { align: 'center' });
+      currentY += 15;
+
+      // Add business name
+      pdf.setFontSize(12);
+      pdf.setTextColor(0, 0, 0);
+      const businessName = userInput.substring(0, 50);
+      pdf.text(`Business: ${businessName}${userInput.length > 50 ? '...' : ''}`, margin, currentY);
+      currentY += 20;
+
+      // Add feature analysis text directly without sections
+      pdf.setFontSize(11);
+      const analysisLines = pdf.splitTextToSize(featureAnalysis, pageWidth - (2 * margin));
+      for (const line of analysisLines) {
+        if (currentY + 10 > pageHeight - margin) {
+          pdf.addPage();
+          currentY = margin;
+        }
+        pdf.text(line, margin, currentY);
+        currentY += 10;
+      }
+
+      // Add footer to all pages
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(128, 128, 128);
+        pdf.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+        pdf.text('Confidential - Feature Priority Analysis', pageWidth / 2, pageHeight - 10, { align: 'center' });
+      }
+
+      // Save the PDF
+      pdf.save('feature_priority_analysis.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setError('Failed to generate PDF. Please try again.');
+    }
+  };
+
+  if (!mounted) return null;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <header className="text-center mb-8">
+        <header className="text-center mb-8 relative">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             Feature Priority Analysis
           </h1>
-          <div className="text-sm text-gray-500">
-            {isConnected ? 
-              <span className="text-green-500">●</span> : 
-              <span className="text-red-500">●</span>
-            } {isConnected ? 'Connected' : 'Disconnected'}
+          <div className="absolute right-0 top-0 flex space-x-2">
+            {featureAnalysis && (
+              <button
+                onClick={generatePDF}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+              >
+                <span>📥</span>
+                <span>Export PDF</span>
+              </button>
+            )}
+            <ChatDialog currentPage="featurePriority" />
           </div>
         </header>
 
@@ -156,14 +186,14 @@ export default function FeaturePriorityContent() {
                 onChange={(e) => setUserInput(e.target.value)}
                 placeholder="Enter your business details for feature prioritization..."
                 className="w-full p-4 border rounded-lg focus:ring-2 focus:ring-blue-500 h-32 resize-none text-black"
-                disabled={!isConnected || isLoading}
+                disabled={isLoading}
               />
             </div>
             <button
               type="submit"
-              disabled={!isConnected || isLoading}
+              disabled={isLoading || !userInput.trim()}
               className={`w-full p-4 rounded-lg font-medium transition-colors ${
-                isConnected && !isLoading
+                !isLoading && userInput.trim()
                   ? 'bg-blue-500 hover:bg-blue-600 text-white'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
