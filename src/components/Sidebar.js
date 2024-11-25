@@ -16,7 +16,7 @@ export default function Sidebar() {
       ]
     },
     {
-      title: 'MODULES',
+      title: 'MODULES', 
       items: [
         { name: 'Market Analysis', icon: '📊', path: '/market-trends' },
         { name: 'Customer Discovery', icon: '👥', path: '/icp-creation' },
@@ -38,7 +38,16 @@ export default function Sidebar() {
   ];
 
   return (
-    <div style={{ width: '256px', minHeight: '100vh', background: 'linear-gradient(to bottom, #1D1D1F, #131314)', color: 'white', padding: '24px', borderRight: '1px solid #1D1D1F', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}>
+    <div style={{ 
+      width: '256px',
+      minHeight: '100vh', 
+      background: 'linear-gradient(to bottom, #1D1D1F, #131314)',
+      color: 'white',
+      padding: '24px',
+      borderRight: '1px solid #1D1D1F',
+      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+      display: 'block' // Ensure sidebar is always visible
+    }}>
      
       {/* Navigation Sections */}
       {menuItems.map((section, index) => (
@@ -75,9 +84,9 @@ export default function Sidebar() {
                 {tooltipVisible && item.tooltip && (
                   <div style={{
                     position: 'absolute',
-                    top: '50%', // Adjusted to show tooltip to the right of the button
-                    left: '100%', // Positioning to the right of the button
-                    transform: 'translateY(-50%)', // Centering vertically
+                    top: '50%',
+                    left: '100%',
+                    transform: 'translateY(-50%)',
                     backgroundColor: '#333',
                     color: 'white',
                     padding: '8px',
@@ -98,4 +107,4 @@ export default function Sidebar() {
     
     </div>
   );
-} 
+}

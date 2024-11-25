@@ -41,7 +41,7 @@ export default function MarketTrendsContent() {
   const [lastAnalyzedInput, setLastAnalyzedInput] = useState('');
   const chartsRef = useRef(null);
 
-  // Chart options with dark theme
+  // Chart options with dark theme and responsive settings
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -174,7 +174,7 @@ export default function MarketTrendsContent() {
       const response = await callGroqApi([
         {
           role: "system",
-          content: `You are a market analysis expert. Analyze market trends and provide detailed insights with specific numbers and percentages that can be visualized. Include monthly growth rates and market segment distributions in your analysis`
+          content: `You are a market analysis expert. Analyze market trends and provide detailed insights with specific numbers and percentages that can be visualized. Include monthly growth rates and market segment distributions in your analysis. Do not use markdown formatting or asterisks in your response.`
         },
         {
           role: "user",
@@ -193,7 +193,7 @@ export default function MarketTrendsContent() {
              - Growth drivers
              - Market dynamics
           
-          Format the response with clear numerical data that can be extracted for visualization.`
+          Format the response with clear numerical data that can be extracted for visualization. Do not use any markdown formatting or asterisks.`
         }
       ]);
 
@@ -282,21 +282,21 @@ export default function MarketTrendsContent() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#131314] text-white p-6">
+    <div className="min-h-screen bg-[#131314] text-white p-3 sm:p-4 lg:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-purple-400 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
               Market Trends Analysis
             </h1>
-            <p className="text-gray-400 mt-2">Analyze market trends and insights</p>
+            <p className="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">Analyze market trends and insights</p>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center w-full sm:w-auto">
             {marketAnalysis && (
               <button
                 onClick={exportToPDF}
-                className="bg-[#1D1D1F] hover:bg-[#2D2D2F] text-white px-4 py-2 rounded-xl flex items-center space-x-2 transition-all"
+                className="w-full sm:w-auto bg-[#1D1D1F] hover:bg-[#2D2D2F] text-white px-3 sm:px-4 py-2 rounded-xl flex items-center justify-center gap-2 transition-all text-sm sm:text-base"
               >
                 <span>📥</span>
                 <span>Export PDF</span>
@@ -306,82 +306,106 @@ export default function MarketTrendsContent() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="bg-[#1D1D1F] p-1 rounded-xl mb-8 inline-flex">
-          <button 
-            className="px-4 py-2 rounded-lg bg-purple-600 text-white"
-          >
-            Market Trends
-          </button>
-          <button 
-            onClick={handleCompetitorTracking}
-            className="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-purple-600/50 transition-all duration-200"
-          >
-            Competitor Tracking
-          </button>
+        <div className="overflow-x-auto -mx-3 sm:mx-0 mb-6 sm:mb-8">
+          <div className="bg-[#1D1D1F] p-1 rounded-xl inline-flex min-w-max mx-3 sm:mx-0">
+            <button 
+              className="px-3 sm:px-4 py-2 rounded-lg bg-purple-600 text-white text-sm sm:text-base whitespace-nowrap"
+            >
+              Market Trends
+            </button>
+            <button 
+              onClick={handleCompetitorTracking}
+              className="px-3 sm:px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-purple-600/50 transition-all duration-200 text-sm sm:text-base whitespace-nowrap"
+            >
+              Competitor Tracking
+            </button>
+          </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 gap-6 mb-8">
-          {/* Charts Section */}
-          {marketData && (
-            <div ref={chartsRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Growth Trend Chart */}
-              <div className="bg-[#1D1D1F] p-6 rounded-2xl border border-purple-500/10">
-                <div className="h-[400px]">
-                  <Line 
-                    options={{
-                      ...chartOptions,
-                      maintainAspectRatio: false,
-                      aspectRatio: 1.5,
-                      plugins: {
-                        ...chartOptions.plugins,
-                        title: {
-                          ...chartOptions.plugins.title,
-                          text: 'Market Growth Over Time'
+        {/* Charts Section */}
+        {marketData && (
+          <div ref={chartsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            {/* Growth Trend Chart */}
+            <div className="bg-[#1D1D1F] p-3 sm:p-4 lg:p-6 rounded-2xl border border-purple-500/10">
+              <div className="h-[250px] sm:h-[300px] lg:h-[400px]">
+                <Line 
+                  options={{
+                    ...chartOptions,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      ...chartOptions.plugins,
+                      title: {
+                        ...chartOptions.plugins.title,
+                        text: 'Market Growth Over Time',
+                        font: {
+                          size: window.innerWidth < 640 ? 12 : window.innerWidth < 1024 ? 13 : 14,
+                          weight: 'bold'
+                        }
+                      },
+                      legend: {
+                        ...chartOptions.plugins.legend,
+                        labels: {
+                          ...chartOptions.plugins.legend.labels,
+                          font: {
+                            size: window.innerWidth < 640 ? 10 : window.innerWidth < 1024 ? 11 : 12
+                          }
                         }
                       }
-                    }} 
-                    data={marketData.monthlyGrowth}
-                  />
-                </div>
-              </div>
-
-              {/* Market Segments Chart */}
-              <div className="bg-[#1D1D1F] p-6 rounded-2xl border border-purple-500/10">
-                <div className="h-[400px]">
-                  <Bar 
-                    options={{
-                      ...chartOptions,
-                      maintainAspectRatio: false,
-                      aspectRatio: 1.5,
-                      plugins: {
-                        ...chartOptions.plugins,
-                        title: {
-                          ...chartOptions.plugins.title,
-                          text: 'Market Share Distribution'
-                        }
-                      }
-                    }} 
-                    data={marketData.marketSegments}
-                  />
-                </div>
+                    }
+                  }} 
+                  data={marketData.monthlyGrowth}
+                />
               </div>
             </div>
-          )}
-        </div>
+
+            {/* Market Segments Chart */}
+            <div className="bg-[#1D1D1F] p-3 sm:p-4 lg:p-6 rounded-2xl border border-purple-500/10">
+              <div className="h-[250px] sm:h-[300px] lg:h-[400px]">
+                <Bar 
+                  options={{
+                    ...chartOptions,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      ...chartOptions.plugins,
+                      title: {
+                        ...chartOptions.plugins.title,
+                        text: 'Market Share Distribution',
+                        font: {
+                          size: window.innerWidth < 640 ? 12 : window.innerWidth < 1024 ? 13 : 14,
+                          weight: 'bold'
+                        }
+                      },
+                      legend: {
+                        ...chartOptions.plugins.legend,
+                        labels: {
+                          ...chartOptions.plugins.legend.labels,
+                          font: {
+                            size: window.innerWidth < 640 ? 10 : window.innerWidth < 1024 ? 11 : 12
+                          }
+                        }
+                      }
+                    }
+                  }} 
+                  data={marketData.marketSegments}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Analysis Results */}
-        <div className="bg-[#1D1D1F] rounded-2xl border border-purple-500/10 p-6">
+        <div className="bg-[#1D1D1F] rounded-2xl border border-purple-500/10 p-3 sm:p-4 lg:p-6">
           {error ? (
-            <div className="text-red-500">
+            <div className="text-red-500 text-sm sm:text-base">
               {error}
+              <p className="text-xs sm:text-sm mt-2">Please try refreshing the page or contact support if the problem persists.</p>
             </div>
           ) : isLoading ? (
-            <div className="flex justify-center items-center h-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            <div className="flex justify-center items-center py-8 sm:py-12">
+              <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 border-b-2 border-purple-500"></div>
             </div>
           ) : marketAnalysis ? (
-            <div className="prose text-gray-300 max-w-none">
+            <div className="prose prose-sm sm:prose-base text-gray-300 max-w-none">
               <div className="whitespace-pre-wrap">{marketAnalysis}</div>
             </div>
           ) : null}

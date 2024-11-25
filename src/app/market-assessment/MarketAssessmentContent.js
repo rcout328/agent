@@ -41,7 +41,7 @@ export default function MarketAssessmentContent() {
   const chartsRef = useRef(null);
   const analysisRef = useRef(null);
 
-  // Chart options with dark theme
+  // Chart options with dark theme and responsive settings
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -50,14 +50,16 @@ export default function MarketAssessmentContent() {
         position: 'top',
         labels: {
           color: '#9ca3af',
-          font: { size: 12 }
+          font: { 
+            size: window?.innerWidth < 768 ? 10 : 12 
+          }
         }
       },
       title: {
         display: true,
         color: '#9ca3af',
         font: {
-          size: 14,
+          size: window?.innerWidth < 768 ? 12 : 14,
           weight: 'bold'
         }
       }
@@ -65,11 +67,21 @@ export default function MarketAssessmentContent() {
     scales: {
       x: {
         grid: { color: 'rgba(75, 85, 99, 0.2)' },
-        ticks: { color: '#9ca3af' }
+        ticks: { 
+          color: '#9ca3af',
+          font: {
+            size: window?.innerWidth < 768 ? 8 : 10
+          }
+        }
       },
       y: {
         grid: { color: 'rgba(75, 85, 99, 0.2)' },
-        ticks: { color: '#9ca3af' }
+        ticks: { 
+          color: '#9ca3af',
+          font: {
+            size: window?.innerWidth < 768 ? 8 : 10
+          }
+        }
       }
     }
   };
@@ -320,21 +332,21 @@ export default function MarketAssessmentContent() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#131314] text-white p-6">
+    <div className="min-h-screen bg-[#131314] text-white p-3 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-8 space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-400 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
               Market Assessment
             </h1>
-            <p className="text-gray-400 mt-2">Assess market size, segments, and opportunities</p>
+            <p className="text-sm sm:text-base text-gray-400 mt-2">Assess market size, segments, and opportunities</p>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
             {marketStatement && (
               <button
                 onClick={exportToPDF}
-                className="bg-[#1D1D1F] hover:bg-[#2D2D2F] text-white px-4 py-2 rounded-xl flex items-center space-x-2 transition-all"
+                className="bg-[#1D1D1F] hover:bg-[#2D2D2F] text-white px-3 sm:px-4 py-2 rounded-xl flex items-center space-x-2 transition-all text-sm sm:text-base w-full sm:w-auto justify-center"
               >
                 <span>📥</span>
                 <span>Export PDF</span>
@@ -344,27 +356,27 @@ export default function MarketAssessmentContent() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="bg-[#1D1D1F] p-1 rounded-xl mb-8 inline-flex">
+        <div className="bg-[#1D1D1F] p-1 rounded-xl mb-4 sm:mb-8 inline-flex w-full sm:w-auto">
           <button 
-            className="px-4 py-2 rounded-lg bg-purple-600 text-white"
+            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg bg-purple-600 text-white text-sm sm:text-base"
           >
             Market Assessment
           </button>
           <button 
             onClick={handleImpactAssessment}
-            className="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-purple-600/50 transition-all duration-200"
+            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-purple-600/50 transition-all duration-200 text-sm sm:text-base"
           >
             Impact Assessment
           </button>
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-8">
           {marketData && (
-            <div ref={chartsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div ref={chartsRef} className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Market Distribution Chart */}
-              <div className="bg-[#1D1D1F] p-6 rounded-2xl border border-purple-500/10">
-                <div className="h-[400px]">
+              <div className="bg-[#1D1D1F] p-3 sm:p-6 rounded-2xl border border-purple-500/10">
+                <div className="h-[300px] sm:h-[400px]">
                   <Bar 
                     options={{
                       ...chartOptions,
@@ -382,32 +394,32 @@ export default function MarketAssessmentContent() {
         </div>
 
         {/* Assessment Form */}
-        <div className="bg-[#1D1D1F] rounded-2xl border border-purple-500/10 p-6">
-          <h2 className="text-2xl font-semibold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
+        <div className="bg-[#1D1D1F] rounded-2xl border border-purple-500/10 p-3 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
             Market Assessment
           </h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             <div>
               <textarea
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 placeholder="Enter your business details for market assessment..."
-                className="w-full h-32 px-4 py-3 bg-[#131314] text-gray-200 rounded-xl border border-purple-500/20 
-                         placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                className="w-full h-24 sm:h-32 px-3 sm:px-4 py-2 sm:py-3 bg-[#131314] text-gray-200 rounded-xl border border-purple-500/20 
+                         placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none text-sm sm:text-base"
                 disabled={isLoading}
               />
             </div>
             <button
               type="submit"
               disabled={isLoading || !userInput.trim()}
-              className={`w-full py-4 px-6 rounded-xl font-medium transition-all duration-200 
+              className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-medium transition-all duration-200 text-sm sm:text-base
                         ${!isLoading && userInput.trim()
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/25'
                   : 'bg-gray-600 text-gray-300 cursor-not-allowed'}`}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
+                  <div className="w-4 sm:w-5 h-4 sm:h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
                   <span>Assessing...</span>
                 </div>
               ) : (
@@ -417,22 +429,22 @@ export default function MarketAssessmentContent() {
           </form>
 
           {/* Assessment Results */}
-          <div ref={analysisRef} className="mt-6">
+          <div ref={analysisRef} className="mt-4 sm:mt-6">
             {error ? (
-              <div className="text-red-500">
+              <div className="text-red-500 text-sm sm:text-base">
                 {error}
-                <p className="text-sm mt-2">Please try refreshing the page or contact support if the problem persists.</p>
+                <p className="text-xs sm:text-sm mt-2">Please try refreshing the page or contact support if the problem persists.</p>
               </div>
             ) : isLoading ? (
               <div className="flex justify-center items-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-gray-900"></div>
               </div>
             ) : marketStatement ? (
-              <div className="prose text-gray-300 max-w-none">
+              <div className="prose text-gray-300 max-w-none text-sm sm:text-base">
                 <div className="whitespace-pre-wrap">{marketStatement}</div>
               </div>
             ) : (
-              <div className="text-gray-500 italic">
+              <div className="text-gray-500 italic text-sm sm:text-base">
                 Market assessment results will appear here...
               </div>
             )}

@@ -49,7 +49,7 @@ export default function CompetitorTrackingContent() {
   const chartsRef = useRef(null);
   const analysisRef = useRef(null);
 
-  // Chart options with dark theme
+  // Chart options with dark theme and responsive settings
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -58,20 +58,22 @@ export default function CompetitorTrackingContent() {
         position: 'top',
         labels: {
           color: '#9ca3af',
-          font: { size: 12 },
-          padding: 20
+          font: { 
+            size: window?.innerWidth < 768 ? 10 : 12 
+          },
+          padding: window?.innerWidth < 768 ? 10 : 20
         }
       },
       title: {
         display: true,
         color: '#9ca3af',
         font: {
-          size: 16,
+          size: window?.innerWidth < 768 ? 14 : 16,
           weight: 'bold'
         },
         padding: {
-          top: 10,
-          bottom: 30
+          top: window?.innerWidth < 768 ? 5 : 10,
+          bottom: window?.innerWidth < 768 ? 15 : 30
         }
       }
     },
@@ -82,25 +84,25 @@ export default function CompetitorTrackingContent() {
         ticks: { 
           color: '#9ca3af',
           backdropColor: 'transparent',
-          font: { size: 11 }
+          font: { size: window?.innerWidth < 768 ? 9 : 11 }
         },
         pointLabels: { 
           color: '#9ca3af',
-          font: { size: 12 }
+          font: { size: window?.innerWidth < 768 ? 10 : 12 }
         }
       },
       x: {
         grid: { color: 'rgba(75, 85, 99, 0.2)' },
         ticks: { 
           color: '#9ca3af',
-          font: { size: 11 }
+          font: { size: window?.innerWidth < 768 ? 9 : 11 }
         }
       },
       y: {
         grid: { color: 'rgba(75, 85, 99, 0.2)' },
         ticks: { 
           color: '#9ca3af',
-          font: { size: 11 }
+          font: { size: window?.innerWidth < 768 ? 9 : 11 }
         }
       }
     }
@@ -347,21 +349,21 @@ export default function CompetitorTrackingContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#131314] text-white p-6">
+    <div className="min-h-screen bg-[#131314] text-white p-3 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-8 space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-400 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
               Competitor Analysis
             </h1>
-            <p className="text-gray-400 mt-2">Track and analyze your competitors</p>
+            <p className="text-sm sm:text-base text-gray-400 mt-2">Track and analyze your competitors</p>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
             {competitorAnalysis && (
               <button
                 onClick={exportToPDF}
-                className="bg-[#1D1D1F] hover:bg-[#2D2D2F] text-white px-4 py-2 rounded-xl flex items-center space-x-2 transition-all"
+                className="w-full sm:w-auto bg-[#1D1D1F] hover:bg-[#2D2D2F] text-white px-3 sm:px-4 py-2 rounded-xl flex items-center justify-center space-x-2 transition-all text-sm sm:text-base"
               >
                 <span>📥</span>
                 <span>Export PDF</span>
@@ -371,27 +373,27 @@ export default function CompetitorTrackingContent() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-[#1D1D1F] p-1 rounded-xl mb-8 inline-flex">
+        <div className="bg-[#1D1D1F] p-1 rounded-xl mb-4 sm:mb-8 inline-flex text-sm sm:text-base">
           <button 
             onClick={handleMarketTrends}
-            className="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-purple-600/50 transition-all duration-200"
+            className="px-3 sm:px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-purple-600/50 transition-all duration-200"
           >
             Market Trends
           </button>
-          <button className="px-4 py-2 rounded-lg bg-purple-600 text-white">
+          <button className="px-3 sm:px-4 py-2 rounded-lg bg-purple-600 text-white">
             Competitor Tracking
           </button>
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 gap-6 mb-8">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 mb-4 sm:mb-8">
           {/* Charts Section */}
           {competitorData && (
-            <div ref={chartsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div ref={chartsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Market Share Chart */}
-              <div className="bg-[#1D1D1F] p-6 rounded-2xl border border-purple-500/10">
-                <h3 className="text-xl font-semibold mb-4 text-gray-200">Market Share Distribution</h3>
-                <div className="h-[300px]">
+              <div className="bg-[#1D1D1F] p-3 sm:p-6 rounded-2xl border border-purple-500/10">
+                <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-200">Market Share Distribution</h3>
+                <div className="h-[250px] sm:h-[300px]">
                   <Bar 
                     options={{
                       ...chartOptions,
@@ -403,7 +405,7 @@ export default function CompetitorTrackingContent() {
                           ...chartOptions.plugins.title,
                           text: 'Market Share Distribution',
                           font: {
-                            size: 18,
+                            size: window?.innerWidth < 768 ? 16 : 18,
                             weight: 'bold'
                           }
                         }
@@ -415,9 +417,9 @@ export default function CompetitorTrackingContent() {
               </div>
 
               {/* Competitive Analysis Radar */}
-              <div className="bg-[#1D1D1F] p-6 rounded-2xl border border-purple-500/10">
-                <h3 className="text-xl font-semibold mb-4 text-gray-200">Competitive Strengths Analysis</h3>
-                <div className="h-[300px]">
+              <div className="bg-[#1D1D1F] p-3 sm:p-6 rounded-2xl border border-purple-500/10">
+                <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-200">Competitive Strengths Analysis</h3>
+                <div className="h-[250px] sm:h-[300px]">
                   <Radar 
                     options={{
                       ...chartOptions,
@@ -429,7 +431,7 @@ export default function CompetitorTrackingContent() {
                           ...chartOptions.plugins.title,
                           text: 'Competitive Strengths',
                           font: {
-                            size: 18,
+                            size: window?.innerWidth < 768 ? 16 : 18,
                             weight: 'bold'
                           }
                         }
@@ -439,12 +441,12 @@ export default function CompetitorTrackingContent() {
                           ...chartOptions.scales.r,
                           pointLabels: {
                             ...chartOptions.scales.r.pointLabels,
-                            font: { size: 14 },
+                            font: { size: window?.innerWidth < 768 ? 12 : 14 },
                             color: '#9ca3af'
                           },
                           ticks: {
                             ...chartOptions.scales.r.ticks,
-                            font: { size: 12 },
+                            font: { size: window?.innerWidth < 768 ? 10 : 12 },
                             backdropPadding: 5
                           }
                         }
@@ -459,32 +461,32 @@ export default function CompetitorTrackingContent() {
         </div>
 
         {/* Analysis Form */}
-        <div className="bg-[#1D1D1F] rounded-2xl border border-purple-500/10 p-6">
-          <h2 className="text-2xl font-semibold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
+        <div className="bg-[#1D1D1F] rounded-2xl border border-purple-500/10 p-3 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
             Competitor Analysis
           </h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             <div>
               <textarea
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 placeholder="Enter your business details for competitor analysis..."
-                className="w-full h-32 px-4 py-3 bg-[#131314] text-gray-200 rounded-xl border border-purple-500/20 
-                         placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                className="w-full h-24 sm:h-32 px-3 sm:px-4 py-2 sm:py-3 bg-[#131314] text-gray-200 rounded-xl border border-purple-500/20 
+                         placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none text-sm sm:text-base"
                 disabled={isLoading}
               />
             </div>
             <button
               type="submit"
               disabled={isLoading || !userInput.trim()}
-              className={`w-full py-4 px-6 rounded-xl font-medium transition-all duration-200 
+              className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-medium transition-all duration-200 text-sm sm:text-base
                         ${!isLoading && userInput.trim()
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/25'
                   : 'bg-gray-600 text-gray-300 cursor-not-allowed'}`}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
+                  <div className="w-4 sm:w-5 h-4 sm:h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
                   <span>Analyzing...</span>
                 </div>
               ) : (
@@ -494,18 +496,18 @@ export default function CompetitorTrackingContent() {
           </form>
 
           {/* Analysis Results */}
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-6">
             {error ? (
-              <div className="text-red-500">
+              <div className="text-red-500 text-sm sm:text-base">
                 {error}
-                <p className="text-sm mt-2">Please try refreshing the page or contact support if the problem persists.</p>
+                <p className="text-xs sm:text-sm mt-2">Please try refreshing the page or contact support if the problem persists.</p>
               </div>
             ) : competitorAnalysis ? (
-              <div className="prose text-gray-300 max-w-none">
+              <div className="prose text-gray-300 max-w-none text-sm sm:text-base">
                 <div className="whitespace-pre-wrap">{competitorAnalysis}</div>
               </div>
             ) : !isLoading && (
-              <div className="text-gray-500 italic">
+              <div className="text-gray-500 italic text-sm sm:text-base">
                 Competitor analysis results will appear here...
               </div>
             )}
