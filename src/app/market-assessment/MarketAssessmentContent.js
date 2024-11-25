@@ -51,7 +51,7 @@ export default function MarketAssessmentContent() {
         labels: {
           color: '#9ca3af',
           font: { 
-            size: window?.innerWidth < 768 ? 10 : 12 
+            size: typeof window !== 'undefined' ? window.innerWidth < 768 ? 10 : 12 : 12
           }
         }
       },
@@ -59,7 +59,7 @@ export default function MarketAssessmentContent() {
         display: true,
         color: '#9ca3af',
         font: {
-          size: window?.innerWidth < 768 ? 12 : 14,
+          size: typeof window !== 'undefined' ? window.innerWidth < 768 ? 12 : 14 : 14,
           weight: 'bold'
         }
       }
@@ -70,7 +70,7 @@ export default function MarketAssessmentContent() {
         ticks: { 
           color: '#9ca3af',
           font: {
-            size: window?.innerWidth < 768 ? 8 : 10
+            size: typeof window !== 'undefined' ? window.innerWidth < 768 ? 8 : 10 : 10
           }
         }
       },
@@ -79,7 +79,7 @@ export default function MarketAssessmentContent() {
         ticks: { 
           color: '#9ca3af',
           font: {
-            size: window?.innerWidth < 768 ? 8 : 10
+            size: typeof window !== 'undefined' ? window.innerWidth < 768 ? 8 : 10 : 10
           }
         }
       }
