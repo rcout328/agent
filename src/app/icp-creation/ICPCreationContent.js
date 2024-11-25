@@ -55,7 +55,7 @@ export default function ICPCreationContent() {
       const response = await callGroqApi([
         {
           role: "system",
-          content: `You are an expert at creating Ideal Customer Profiles (ICP). Create a detailed ICP analysis that covers all key aspects of the target customer. Focus on providing specific, actionable insights.`
+          content: `You are an expert at creating Ideal Customer Profiles (ICP). Create a detailed ICP analysis that covers all key aspects of the target customer. Focus on providing specific, actionable insights. Format your response using clear headings and bullet points with dashes (-). Do not use any asterisks or other special characters for emphasis - use clear headings and proper formatting instead.`
         },
         {
           role: "user",
@@ -82,7 +82,7 @@ export default function ICPCreationContent() {
              - Goals
              - Purchase triggers
           
-          Format the response in a clear, structured manner with specific details and insights.`
+          Format the response in a clear, structured manner with specific details and insights. Use headings and bullet points with dashes (-) for organization. Do not use any asterisks or special characters for emphasis.`
         }
       ]);
 

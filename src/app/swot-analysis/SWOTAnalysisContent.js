@@ -52,34 +52,38 @@ export default function SWOTAnalysisContent() {
       const response = await callGroqApi([
         {
           role: "system",
-          content: `You are a SWOT analysis expert. Create a detailed SWOT analysis that covers all key aspects of the business. Focus on providing specific, actionable insights about strengths, weaknesses, opportunities, and threats.`
+          content: `You are a SWOT analysis expert. Create a detailed SWOT analysis that covers all key aspects of the business. Focus on providing specific, actionable insights about strengths, weaknesses, opportunities, and threats. Format the response without using any asterisks (*) for emphasis - instead use clear headings and proper spacing.`
         },
         {
           role: "user",
           content: `Create a detailed SWOT analysis for this business: ${userInput}. 
           Please analyze and provide:
-          1. Strengths
-             - Core competencies
-             - Unique advantages
-             - Key resources
-             - Market position
-          2. Weaknesses
-             - Internal limitations
-             - Resource gaps
-             - Competitive disadvantages
-             - Areas for improvement
-          3. Opportunities
-             - Market trends
-             - Growth potential
-             - New markets
-             - Innovation possibilities
-          4. Threats
-             - Market risks
-             - Competitive pressures
-             - External challenges
-             - Potential obstacles
           
-          Format the response in a clear, structured manner with specific details for each SWOT component.`
+          STRENGTHS
+          - Core competencies
+          - Unique advantages
+          - Key resources
+          - Market position
+          
+          WEAKNESSES
+          - Internal limitations
+          - Resource gaps
+          - Competitive disadvantages
+          - Areas for improvement
+          
+          OPPORTUNITIES
+          - Market trends
+          - Growth potential
+          - New markets
+          - Innovation possibilities
+          
+          THREATS
+          - Market risks
+          - Competitive pressures
+          - External challenges
+          - Potential obstacles
+          
+          Format the response with clear headings and bullet points, avoiding any asterisks.`
         }
       ]);
 

@@ -142,7 +142,7 @@ export default function CompetitorTrackingContent() {
       const response = await callGroqApi([
         {
           role: "system",
-          content: `You are a competitor analysis expert. Analyze competitors and provide detailed insights with specific numbers and percentages that can be visualized. Include market share percentages and competitive strength scores.`
+          content: `You are a competitor analysis expert. Analyze competitors and provide detailed insights with specific numbers and percentages that can be visualized. Include market share percentages and competitive strength scores. Do not use any markdown formatting or asterisks in your response.`
         },
         {
           role: "user",
@@ -161,13 +161,16 @@ export default function CompetitorTrackingContent() {
              - Market positioning
              - Growth trends
           
-          Format the response with clear numerical data that can be extracted for visualization.`
+          Format the response with clear numerical data that can be extracted for visualization. Do not use any markdown formatting or asterisks.`
         }
       ]);
 
-      setCompetitorAnalysis(response);
-      setCompetitorData(parseCompetitorData(response));
-      localStorage.setItem(`competitorAnalysis_${userInput}`, response);
+      // Remove any asterisks from the response
+      const cleanResponse = response.replace(/\*/g, '');
+      
+      setCompetitorAnalysis(cleanResponse);
+      setCompetitorData(parseCompetitorData(cleanResponse));
+      localStorage.setItem(`competitorAnalysis_${userInput}`, cleanResponse);
       setLastAnalyzedInput(userInput);
     } catch (error) {
       console.error('Error:', error);

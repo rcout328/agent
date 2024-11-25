@@ -6,16 +6,6 @@ import { callGroqApi } from '@/utils/groqApi';
 import ChatDialog from '@/components/ChatDialog';
 import jsPDF from 'jspdf';
 
-// Remove the helper function for PDF section titles
-// const addSectionTitle = (pdf, title, yPosition) => {
-//   pdf.setFontSize(14);
-//   pdf.setTextColor(0, 0, 0);
-//   pdf.setFont(undefined, 'bold');
-//   pdf.text(title, 15, yPosition);
-//   pdf.setFont(undefined, 'normal');
-//   return yPosition + 10;
-// };
-
 export default function ComplianceCheckContent() {
   const [userInput, setUserInput] = useStoredInput();
   const [complianceAnalysis, setComplianceAnalysis] = useState('');
@@ -24,7 +14,6 @@ export default function ComplianceCheckContent() {
   const [mounted, setMounted] = useState(false);
   const [lastAnalyzedInput, setLastAnalyzedInput] = useState('');
 
-  // Load stored analysis on mount and when userInput changes
   useEffect(() => {
     setMounted(true);
     const storedAnalysis = localStorage.getItem(`complianceAnalysis_${userInput}`);
@@ -34,7 +23,6 @@ export default function ComplianceCheckContent() {
       setLastAnalyzedInput(userInput);
     } else {
       setComplianceAnalysis('');
-      // Auto-submit only if input is different from last analyzed
       if (mounted && userInput && !isLoading && userInput !== lastAnalyzedInput) {
         handleSubmit(new Event('submit'));
         setLastAnalyzedInput(userInput);
@@ -46,7 +34,6 @@ export default function ComplianceCheckContent() {
     e.preventDefault();
     if (!userInput.trim() || isLoading) return;
 
-    // Check if analysis already exists for this exact input
     const storedAnalysis = localStorage.getItem(`complianceAnalysis_${userInput}`);
     if (storedAnalysis && userInput === lastAnalyzedInput) {
       setComplianceAnalysis(storedAnalysis);
@@ -60,7 +47,7 @@ export default function ComplianceCheckContent() {
       const response = await callGroqApi([
         {
           role: "system",
-          content: `You are a compliance analysis expert. Create a detailed compliance analysis that covers all key regulatory and operational requirements. Focus on providing specific, actionable insights about compliance needs and risk management.`
+          content: `You are a compliance analysis expert. Create a detailed compliance analysis that covers all key regulatory and operational requirements. Focus on providing specific, actionable insights about compliance needs and risk management. Format your response without using any markdown formatting like bold (**) or italics (*).`
         },
         {
           role: "user",
@@ -87,7 +74,7 @@ export default function ComplianceCheckContent() {
              - Monitoring systems
              - Incident response plans
           
-          Format the response in a clear, structured manner with specific details for each component.`
+          Format the response in a clear, structured manner with specific details for each component. Do not use any markdown formatting like bold (**) or italics (*).`
         }
       ]);
 
@@ -102,7 +89,6 @@ export default function ComplianceCheckContent() {
     }
   };
 
-  // Add PDF generation function
   const generatePDF = async () => {
     try {
       const pdf = new jsPDF();
@@ -111,20 +97,17 @@ export default function ComplianceCheckContent() {
       const margin = 15;
       let currentY = margin;
 
-      // Add title
       pdf.setFontSize(20);
       pdf.setTextColor(0, 102, 204);
       pdf.text('Compliance Check Report', pageWidth / 2, currentY, { align: 'center' });
       currentY += 15;
 
-      // Add business name
       pdf.setFontSize(12);
       pdf.setTextColor(0, 0, 0);
       const businessName = userInput.substring(0, 50);
       pdf.text(`Business: ${businessName}${userInput.length > 50 ? '...' : ''}`, margin, currentY);
       currentY += 20;
 
-      // Add compliance analysis text without dividing into sections
       pdf.setFontSize(11);
       const analysisLines = pdf.splitTextToSize(complianceAnalysis, pageWidth - (2 * margin));
       for (const line of analysisLines) {
@@ -136,7 +119,6 @@ export default function ComplianceCheckContent() {
         currentY += 10;
       }
 
-      // Add footer to all pages
       const totalPages = pdf.internal.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
         pdf.setPage(i);
@@ -146,7 +128,6 @@ export default function ComplianceCheckContent() {
         pdf.text('Confidential - Compliance Check Report', pageWidth / 2, pageHeight - 10, { align: 'center' });
       }
 
-      // Save the PDF
       pdf.save('compliance_check_report.pdf');
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -177,7 +158,6 @@ export default function ComplianceCheckContent() {
           </div>
         </header>
 
-        {/* Input Form */}
         <div className="mb-8">
           <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
             <div className="mb-4">
@@ -203,9 +183,7 @@ export default function ComplianceCheckContent() {
           </form>
         </div>
 
-        {/* Analysis Results */}
         <div className="grid md:grid-cols-1 gap-6">
-          {/* Compliance Analysis Box */}
           <div className="bg-white rounded-xl shadow-xl p-6">
             <h2 className="text-2xl font-semibold mb-4 text-gray-700 flex items-center">
               <span className="mr-2">📋</span> Compliance Analysis
@@ -233,4 +211,4 @@ export default function ComplianceCheckContent() {
       </div>
     </main>
   );
-} 
+}

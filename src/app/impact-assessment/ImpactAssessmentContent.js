@@ -2,39 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useStoredInput } from '@/hooks/useStoredInput';
-import { Line, Bar } from 'react-chartjs-2';
 import { callGroqApi } from '@/utils/groqApi';
 import { useRouter } from 'next/navigation';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 export default function ImpactAssessmentContent() {
   const [userInput, setUserInput] = useStoredInput();
   const [impactAnalysis, setImpactAnalysis] = useState('');
-  const [impactData, setImpactData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [mounted, setMounted] = useState(false);
@@ -42,41 +17,7 @@ export default function ImpactAssessmentContent() {
   const router = useRouter();
 
   // Add refs for PDF content
-  const chartsRef = useRef(null);
   const analysisRef = useRef(null);
-
-  // Chart options with dark theme
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          color: '#9ca3af',
-          font: { size: 12 }
-        }
-      },
-      title: {
-        display: true,
-        color: '#9ca3af',
-        font: {
-          size: 14,
-          weight: 'bold'
-        }
-      }
-    },
-    scales: {
-      x: {
-        grid: { color: 'rgba(75, 85, 99, 0.2)' },
-        ticks: { color: '#9ca3af' }
-      },
-      y: {
-        grid: { color: 'rgba(75, 85, 99, 0.2)' },
-        ticks: { color: '#9ca3af' }
-      }
-    }
-  };
 
   // Handle navigation to Market Assessment
   const handleMarketAssessment = () => {
@@ -90,11 +31,9 @@ export default function ImpactAssessmentContent() {
     
     if (storedAnalysis) {
       setImpactAnalysis(storedAnalysis);
-      setImpactData(parseImpactData(storedAnalysis));
       setLastAnalyzedInput(userInput);
     } else {
       setImpactAnalysis('');
-      setImpactData(null);
       if (mounted && userInput && !isLoading && userInput !== lastAnalyzedInput) {
         handleSubmit(new Event('submit'));
         setLastAnalyzedInput(userInput);
@@ -109,7 +48,6 @@ export default function ImpactAssessmentContent() {
     const storedAnalysis = localStorage.getItem(`impactAnalysis_${userInput}`);
     if (storedAnalysis && userInput === lastAnalyzedInput) {
       setImpactAnalysis(storedAnalysis);
-      setImpactData(parseImpactData(storedAnalysis));
       return;
     }
 
@@ -120,101 +58,49 @@ export default function ImpactAssessmentContent() {
       const response = await callGroqApi([
         {
           role: "system",
-          content: `You are an impact assessment expert. Create a detailed impact assessment that covers all key aspects of business impact. Focus on providing specific, actionable insights about social, economic, and environmental impacts.`
+          content: `You are an impact assessment expert. Create a detailed impact assessment that covers all key aspects of business impact. Focus on providing specific, actionable insights about social, economic, and environmental impacts. Format the response without using any asterisks (*) or markdown bold (**) syntax - use plain text with clear headings and numbered/dashed lists.`
         },
         {
           role: "user",
-          content: `Create a detailed impact assessment for this business: ${userInput}. 
+          content: `Create a detailed impact assessment for this business: ${userInput}.
           Please analyze and provide:
+
           1. Social Impact
              - Community benefits
-             - Employment impact
+             - Employment impact 
              - Social value creation
              - Stakeholder engagement
+
           2. Economic Impact
              - Revenue generation
              - Job creation
              - Market influence
              - Economic growth
+
           3. Environmental Impact
              - Resource usage
              - Carbon footprint
              - Sustainability measures
              - Environmental initiatives
+
           4. Long-term Impact
              - Future projections
              - Sustainable growth
              - Legacy potential
              - Impact scaling
-          
-          Format the response in a clear, structured manner with specific details for each component.`
+
+          Ensure the response is clearly structured, with specific details for each component. Use numbered or dashed lists, not asterisks or markdown bold syntax, for bullet points. Make the content easy to read and follow.`
         }
       ]);
 
       setImpactAnalysis(response);
       localStorage.setItem(`impactAnalysis_${userInput}`, response);
-      setImpactData(parseImpactData(response));
       setLastAnalyzedInput(userInput);
     } catch (error) {
       console.error('Error:', error);
       setError('Failed to get analysis. Please try again.');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Parse impact data from analysis
-  const parseImpactData = (content) => {
-    try {
-      // Impact Growth Data
-      const impactGrowth = {
-        labels: ['2024', '2025', '2026', '2027', '2028'],
-        datasets: [
-          {
-            label: 'Social Impact Score',
-            data: [65, 72, 78, 85, 90],
-            borderColor: 'rgb(147, 51, 234)',
-            backgroundColor: 'rgba(147, 51, 234, 0.5)',
-            tension: 0.4,
-          },
-          {
-            label: 'Environmental Impact Score',
-            data: [70, 75, 82, 88, 92],
-            borderColor: 'rgb(16, 185, 129)',
-            backgroundColor: 'rgba(16, 185, 129, 0.5)',
-            tension: 0.4,
-          }
-        ]
-      };
-
-      // Impact Categories Data
-      const impactCategories = {
-        labels: ['Social', 'Economic', 'Environmental', 'Community', 'Innovation'],
-        datasets: [{
-          label: 'Impact Score',
-          data: [85, 78, 92, 88, 76],
-          backgroundColor: [
-            'rgba(147, 51, 234, 0.5)',  // Purple
-            'rgba(59, 130, 246, 0.5)',  // Blue
-            'rgba(16, 185, 129, 0.5)',  // Green
-            'rgba(245, 158, 11, 0.5)',  // Orange
-            'rgba(239, 68, 68, 0.5)',   // Red
-          ],
-          borderColor: [
-            'rgb(147, 51, 234)',
-            'rgb(59, 130, 246)',
-            'rgb(16, 185, 129)',
-            'rgb(245, 158, 11)',
-            'rgb(239, 68, 68)',
-          ],
-          borderWidth: 1,
-        }]
-      };
-
-      return { impactGrowth, impactCategories };
-    } catch (error) {
-      console.error('Error parsing impact data:', error);
-      return null;
     }
   };
 
@@ -250,20 +136,6 @@ export default function ImpactAssessmentContent() {
         }
         pdf.text(line, margin, currentY);
         currentY += 10;
-      }
-
-      // Add charts if available
-      if (chartsRef.current && impactData) {
-        pdf.addPage();
-        currentY = margin;
-        
-        const chartsCanvas = await html2canvas(chartsRef.current);
-        const chartsImage = chartsCanvas.toDataURL('image/png');
-        const chartsAspectRatio = chartsCanvas.width / chartsCanvas.height;
-        const chartsWidth = pageWidth - (2 * margin);
-        const chartsHeight = chartsWidth / chartsAspectRatio;
-
-        pdf.addImage(chartsImage, 'PNG', margin, currentY, chartsWidth, chartsHeight);
       }
 
       // Add footer to all pages
@@ -322,50 +194,6 @@ export default function ImpactAssessmentContent() {
           >
             Impact Assessment
           </button>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 gap-6 mb-8">
-          {/* Charts Section */}
-          {impactData && (
-            <div ref={chartsRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Impact Growth Chart */}
-              <div className="bg-[#1D1D1F] p-6 rounded-2xl border border-purple-500/10">
-                <div className="h-[400px]">
-                  <Line 
-                    options={{
-                      ...chartOptions,
-                      maintainAspectRatio: false,
-                      aspectRatio: 1.5,
-                      plugins: {
-                        ...chartOptions.plugins,
-                        title: { ...chartOptions.plugins.title, text: 'Impact Score Trends' }
-                      }
-                    }} 
-                    data={impactData.impactGrowth}
-                  />
-                </div>
-              </div>
-
-              {/* Impact Categories Chart */}
-              <div className="bg-[#1D1D1F] p-6 rounded-2xl border border-purple-500/10">
-                <div className="h-[400px]">
-                  <Bar 
-                    options={{
-                      ...chartOptions,
-                      maintainAspectRatio: false,
-                      aspectRatio: 1.5,
-                      plugins: {
-                        ...chartOptions.plugins,
-                        title: { ...chartOptions.plugins.title, text: 'Impact Distribution' }
-                      }
-                    }} 
-                    data={impactData.impactCategories}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Analysis Form */}
@@ -428,4 +256,4 @@ export default function ImpactAssessmentContent() {
       </div>
     </div>
   );
-} 
+}

@@ -52,34 +52,33 @@ export default function FeaturePriorityContent() {
       const response = await callGroqApi([
         {
           role: "system",
-          content: `You are a feature prioritization expert. Create a detailed feature priority analysis that covers all key aspects of product features. Focus on providing specific, actionable insights about feature importance and implementation strategy.`
-        },
-        {
-          role: "user",
-          content: `Analyze feature priorities for this business: ${userInput}. 
+          content: `You are a feature prioritization expert. Create a detailed impact assessment for the business: ${userInput}. 
           Please provide:
-          1. Core Features
-             - Essential functionalities
-             - Must-have features
-             - Core user requirements
-             - Basic capabilities
-          2. Priority Assessment
-             - Feature importance ranking
-             - User impact analysis
-             - Development complexity
-             - Resource requirements
-          3. Implementation Timeline
-             - Development phases
-             - Feature dependencies
-             - Resource allocation
-             - Milestone planning
-          4. Success Metrics
-             - Performance indicators
-             - User adoption metrics
-             - Impact measurement
-             - ROI assessment
+          Social Impact
+          1. Community Benefits
+          2. Employment Impact
+          3. Social Value Creation
+          4. Stakeholder Engagement
           
-          Format the response in a clear, structured manner with specific details for each component.`
+          Economic Impact
+          1. Revenue Generation
+          2. Job Creation
+          3. Market Influence
+          4. Economic Growth
+          
+          Environmental Impact
+          1. Resource Usage
+          2. Carbon Footprint
+          3. Sustainability Measures
+          4. Environmental Initiatives
+          
+          Long-term Impact
+          1. Future Projections
+          2. Sustainable Growth
+          3. Legacy Potential
+          4. Impact Scaling
+          
+          Format the response in a clear, structured manner with specific details for each component. Do not use any markdown formatting or asterisks.`
         }
       ]);
 

@@ -102,7 +102,7 @@ export default function JourneyMappingContent() {
       const response = await callGroqApi([
         {
           role: "system",
-          content: `You are a customer journey mapping expert. Create a detailed journey map analysis that covers all key touchpoints and interactions. Focus on providing specific, actionable insights about the customer journey.`
+          content: `You are a customer journey mapping expert. Create a detailed journey map analysis that covers all key touchpoints and interactions. Focus on providing specific, actionable insights about the customer journey. Format your response in plain text without any special formatting or markdown symbols.`
         },
         {
           role: "user",
@@ -113,12 +113,14 @@ export default function JourneyMappingContent() {
           3. Post-Purchase Journey
           4. Journey Optimization
           
-          Format the response in a clear, structured manner with specific details for each stage of the journey.`
+          Format the response in a clear, structured manner with specific details for each stage of the journey. Do not use any markdown formatting or special characters.`
         }
       ]);
 
-      setJourneyMapping(response);
-      localStorage.setItem(`journeyMapping_${userInput}`, response);
+      // Remove any markdown formatting from the response
+      const cleanResponse = response.replace(/[*_~`]/g, '');
+      setJourneyMapping(cleanResponse);
+      localStorage.setItem(`journeyMapping_${userInput}`, cleanResponse);
       setLastAnalyzedInput(userInput);
     } catch (error) {
       console.error('Error:', error);

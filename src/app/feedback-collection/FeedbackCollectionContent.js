@@ -52,12 +52,12 @@ export default function FeedbackCollectionContent() {
       const response = await callGroqApi([
         {
           role: "system",
-          content: `You are a feedback analysis expert. Create a detailed feedback analysis that covers all key aspects of customer feedback. Focus on providing specific, actionable insights about customer satisfaction and improvement opportunities.`
+          content: `You are a feedback analysis expert. Create a detailed feedback analysis that covers all key aspects of customer feedback. Focus on providing specific, actionable insights about customer satisfaction and improvement opportunities. Do not use any special formatting or symbols like asterisks - present everything in plain text.`
         },
         {
           role: "user",
           content: `Analyze customer feedback for this business: ${userInput}. 
-          Please analyze and provide:
+          Please analyze and provide in plain text without any special formatting:
           1. Customer Satisfaction
              - Overall satisfaction levels
              - Key satisfaction drivers
@@ -79,7 +79,7 @@ export default function FeedbackCollectionContent() {
              - Resource requirements
              - Implementation timeline
           
-          Format the response in a clear, structured manner with specific details for each component.`
+          Format the response in a clear, structured manner with specific details for each component. Do not use any special formatting or symbols - present everything in plain text.`
         }
       ]);
 

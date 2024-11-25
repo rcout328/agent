@@ -52,7 +52,7 @@ export default function GapAnalysisContent() {
       const response = await callGroqApi([
         {
           role: "system",
-          content: `You are a gap analysis expert. Create a detailed gap analysis that identifies and analyzes the gaps between current and desired business state. Focus on providing specific, actionable insights about business gaps and improvement opportunities.`
+          content: `You are a gap analysis expert. Create a detailed gap analysis that identifies and analyzes the gaps between current and desired business state. Focus on providing specific, actionable insights about business gaps and improvement opportunities. Do not use any special formatting or symbols like asterisks - present everything in plain text with clear headings and sections.`
         },
         {
           role: "user",
@@ -79,7 +79,7 @@ export default function GapAnalysisContent() {
              - Timeline suggestions
              - Implementation priorities
           
-          Format the response in a clear, structured manner with specific details for each component.`
+          Format the response in a clear, structured manner with specific details for each component. Use plain text only without any special formatting or symbols.`
         }
       ]);
 
