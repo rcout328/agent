@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [tooltipVisible, setTooltipVisible] = useState(false);
 
   const menuItems = [
     {
@@ -26,7 +28,11 @@ export default function Sidebar() {
     {
       title: 'OPERATIONS',
       items: [
-        { name: 'Talk to Agents', icon: '💬', path: '/chat' }
+        { 
+          name: 'Talk to Agents', 
+          icon: '💬', 
+          path: '/chat'
+        }
       ]
     }
   ];
@@ -34,7 +40,6 @@ export default function Sidebar() {
   return (
     <div style={{ width: '256px', minHeight: '100vh', background: 'linear-gradient(to bottom, #1D1D1F, #131314)', color: 'white', padding: '24px', borderRight: '1px solid #1D1D1F', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}>
      
-
       {/* Navigation Sections */}
       {menuItems.map((section, index) => (
         <div key={index} style={{ marginBottom: '24px' }}>
@@ -43,25 +48,47 @@ export default function Sidebar() {
           </h2>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {section.items.map((item, itemIndex) => (
-              <Link
-                key={itemIndex}
-                href={item.path}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '10px 12px',
-                  borderRadius: '12px',
-                  transition: 'all 0.2s',
-                  backgroundColor: pathname === item.path ? '#6B46C1' : 'transparent',
-                  color: pathname === item.path ? 'white' : '#9CA3AF',
-                  textDecoration: 'none'
-                }}
+              <div 
+                key={itemIndex} 
+                onMouseEnter={() => setTooltipVisible(true)} 
+                onMouseLeave={() => setTooltipVisible(false)}
+                style={{ position: 'relative' }}
               >
-                <span style={{ fontSize: '24px', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '8px' }}>
-                  {item.icon}
-                </span>
-                <span style={{ fontSize: '14px', fontWeight: '500' }}>{item.name}</span>
-              </Link>
+                <Link
+                  href={item.path}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '10px 12px',
+                    borderRadius: '12px',
+                    transition: 'all 0.2s',
+                    backgroundColor: pathname === item.path ? '#6B46C1' : 'transparent',
+                    color: pathname === item.path ? 'white' : '#9CA3AF',
+                    textDecoration: 'none'
+                  }}
+                >
+                  <span style={{ fontSize: '24px', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '8px' }}>
+                    {item.icon}
+                  </span>
+                  <span style={{ fontSize: '14px', fontWeight: '500' }}>{item.name}</span>
+                </Link>
+                {tooltipVisible && item.tooltip && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%', // Adjusted to show tooltip to the right of the button
+                    left: '100%', // Positioning to the right of the button
+                    transform: 'translateY(-50%)', // Centering vertically
+                    backgroundColor: '#333',
+                    color: 'white',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    zIndex: 1,
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {item.tooltip}
+                  </div>
+                )}
+              </div>
             ))}
           </nav>
         </div>

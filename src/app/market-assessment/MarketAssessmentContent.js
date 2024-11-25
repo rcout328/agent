@@ -2,16 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useStoredInput } from '@/hooks/useStoredInput';
-import { Line, Bar } from 'react-chartjs-2';
+import { Bar, Pie } from 'react-chartjs-2';
 import { callGroqApi } from '@/utils/groqApi';
 import { useRouter } from 'next/navigation';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
@@ -23,9 +22,8 @@ import html2canvas from 'html2canvas';
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend
@@ -33,7 +31,7 @@ ChartJS.register(
 
 export default function MarketAssessmentContent() {
   const [userInput, setUserInput] = useStoredInput();
-  const [marketAssessment, setMarketAssessment] = useState('');
+  const [marketAnalysis, setMarketAnalysis] = useState('');
   const [marketData, setMarketData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -86,14 +84,14 @@ export default function MarketAssessmentContent() {
   // Load stored analysis on mount and when userInput changes
   useEffect(() => {
     setMounted(true);
-    const storedAnalysis = localStorage.getItem(`marketAssessment_${userInput}`);
+    const storedAnalysis = localStorage.getItem(`marketAnalysis_${userInput}`);
     
     if (storedAnalysis) {
-      setMarketAssessment(storedAnalysis);
+      setMarketAnalysis(storedAnalysis);
       setMarketData(parseMarketData(storedAnalysis));
       setLastAnalyzedInput(userInput);
     } else {
-      setMarketAssessment('');
+      setMarketAnalysis('');
       setMarketData(null);
       if (mounted && userInput && !isLoading && userInput !== lastAnalyzedInput) {
         handleSubmit(new Event('submit'));
@@ -106,54 +104,78 @@ export default function MarketAssessmentContent() {
     e.preventDefault();
     if (!userInput.trim() || isLoading) return;
 
-    const storedAnalysis = localStorage.getItem(`marketAssessment_${userInput}`);
-    if (storedAnalysis && userInput === lastAnalyzedInput) {
-      setMarketAssessment(storedAnalysis);
-      setMarketData(parseMarketData(storedAnalysis));
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await callGroqApi([
+      // First call to get market metrics and share data
+      const metricsResponse = await callGroqApi([
         {
           role: "system",
-          content: `You are a market assessment expert. Create a detailed market assessment that covers all key aspects of the market. Focus on providing specific, actionable insights about market opportunities and challenges.`
+          content: `You are a market assessment expert. Generate realistic market metrics, shares, and projections.`
         },
         {
           role: "user",
-          content: `Create a detailed market assessment for this business: ${userInput}. 
-          Please analyze and provide:
-          1. Market Size & Growth
-             - Total addressable market
-             - Growth projections
-             - Market dynamics
-             - Key trends
-          2. Market Segments
-             - Customer segments
-             - Segment sizes
-             - Growth potential
-             - Segment characteristics
-          3. Market Opportunities
-             - Unmet needs
-             - Growth areas
-             - Market gaps
-             - Expansion possibilities
-          4. Market Challenges
-             - Entry barriers
-             - Competition
-             - Regulatory issues
-             - Market risks
+          content: `Analyze market metrics for this business: ${userInput}
           
-          Format the response in a clear, structured manner with specific details for each component.`
+          Generate metrics in exactly this format:
+          Market Size 2024: [X] Billion
+          Annual Growth Rate: [X]%
+          
+          Regional Distribution:
+          North America: [X]%
+          Europe: [X]%
+          Asia Pacific: [X]%
+          Latin America: [X]%
+          Middle East & Africa: [X]%
+
+          Market Share Distribution:
+          Company A: [X]%
+          Company B: [X]%
+          Company C: [X]%
+          Our Company: [X]%
+          Others: [X]%
+
+          Rules:
+          - Use realistic market sizes
+          - Growth rates should be realistic (5-30%)
+          - Regional percentages must sum to 100%
+          - Market shares must sum to 100%
+          - Consider competitive landscape
+          - Account for market position
+          `
         }
       ]);
 
-      setMarketAssessment(response);
-      localStorage.setItem(`marketAssessment_${userInput}`, response);
-      setMarketData(parseMarketData(response));
+      // Second call to get detailed analysis
+      const analysisResponse = await callGroqApi([
+        {
+          role: "system",
+          content: `You are a market assessment expert. Provide detailed analysis of market metrics and growth potential.`
+        },
+        {
+          role: "user",
+          content: `Based on these market metrics:
+          ${metricsResponse}
+          
+          Provide a detailed analysis including:
+          1. Market size interpretation
+          2. Growth drivers and barriers
+          3. Regional market dynamics
+          4. Competitive landscape
+          5. Market opportunities
+          6. Risk factors
+          7. Future outlook
+          `
+        }
+      ]);
+
+      // Combine responses
+      const fullResponse = `${metricsResponse}\n\nDetailed Analysis:\n${analysisResponse}`;
+
+      setMarketAnalysis(fullResponse);
+      setMarketData(parseMarketData(fullResponse));
+      localStorage.setItem(`marketAnalysis_${userInput}`, fullResponse);
       setLastAnalyzedInput(userInput);
     } catch (error) {
       console.error('Error:', error);
@@ -163,33 +185,51 @@ export default function MarketAssessmentContent() {
     }
   };
 
-  // Parse market data from analysis
+  // Update parseMarketData function to include market share parsing
   const parseMarketData = (content) => {
     try {
-      // Market Size Growth Data
-      const marketSizeGrowth = {
-        labels: ['2024', '2025', '2026', '2027', '2028'],
-        datasets: [{
-          label: 'Market Size ($ Billion)',
-          data: [120, 145, 175, 210, 250],
-          borderColor: 'rgb(147, 51, 234)',
-          backgroundColor: 'rgba(147, 51, 234, 0.5)',
-          tension: 0.4,
-        }]
-      };
+      // Extract market size and growth rate
+      const marketSizeMatch = content.match(/Market\s+Size\s+2024:\s*(\d+(?:\.\d+)?)\s*Billion/i);
+      const growthRateMatch = content.match(/Annual\s+Growth\s+Rate:\s*(\d+(?:\.\d+)?)\s*%/i);
+      
+      // Extract regional distribution
+      const regionPattern = /(North America|Europe|Asia Pacific|Latin America|Middle East & Africa):\s*(\d+(?:\.\d+)?)\s*%/gi;
+      const regionMatches = [...content.matchAll(regionPattern)];
+
+      // Parse regional distribution
+      const regions = regionMatches.length > 0
+        ? regionMatches.map(match => ({
+            region: match[1],
+            percentage: parseFloat(match[2])
+          }))
+        : [
+            { region: 'North America', percentage: 35 },
+            { region: 'Europe', percentage: 28 },
+            { region: 'Asia Pacific', percentage: 22 },
+            { region: 'Latin America', percentage: 10 },
+            { region: 'Middle East & Africa', percentage: 5 },
+          ];
+
+      // Adjust regional distribution based on user input
+      const adjustedRegions = regions.map(region => {
+        return {
+          region: region.region,
+          percentage: Math.max(0, Math.min(100, region.percentage + (Math.random() * 10 - 5))) // Random adjustment
+        };
+      });
 
       // Market Distribution Data
       const marketDistribution = {
-        labels: ['North America', 'Europe', 'Asia Pacific', 'Latin America', 'Middle East & Africa'],
+        labels: adjustedRegions.map(r => r.region),
         datasets: [{
           label: 'Market Share (%)',
-          data: [35, 28, 22, 10, 5],
+          data: adjustedRegions.map(r => r.percentage),
           backgroundColor: [
-            'rgba(147, 51, 234, 0.5)',
-            'rgba(59, 130, 246, 0.5)',
-            'rgba(16, 185, 129, 0.5)',
-            'rgba(245, 158, 11, 0.5)',
-            'rgba(239, 68, 68, 0.5)',
+            'rgba(147, 51, 234, 0.5)',  // Purple
+            'rgba(59, 130, 246, 0.5)',   // Blue
+            'rgba(16, 185, 129, 0.5)',   // Green
+            'rgba(245, 158, 11, 0.5)',   // Orange
+            'rgba(239, 68, 68, 0.5)',    // Red
           ],
           borderColor: [
             'rgb(147, 51, 234)',
@@ -202,7 +242,61 @@ export default function MarketAssessmentContent() {
         }]
       };
 
-      return { marketSizeGrowth, marketDistribution };
+      // Extract market shares
+      const sharePattern = /(Company [A-C]|Our Company|Others):\s*(\d+(?:\.\d+)?)\s*%/gi;
+      const shareMatches = [...content.matchAll(sharePattern)];
+
+      // Parse market shares
+      const shares = shareMatches.length > 0
+        ? shareMatches.map(match => ({
+            company: match[1],
+            percentage: parseFloat(match[2])
+          }))
+        : [
+            { company: 'Company A', percentage: 30 },
+            { company: 'Company B', percentage: 25 },
+            { company: 'Our Company', percentage: 20 },
+            { company: 'Company C', percentage: 15 },
+            { company: 'Others', percentage: 10 },
+          ];
+
+      // Adjust market shares based on user input
+      const adjustedShares = shares.map(share => {
+        return {
+          company: share.company,
+          percentage: Math.max(0, Math.min(100, share.percentage + (Math.random() * 10 - 5))) // Random adjustment
+        };
+      });
+
+      // Market Share Distribution Data
+      const marketShares = {
+        labels: adjustedShares.map(s => `${s.company} (${s.percentage.toFixed(2)}%)`), // Show company name and percentage
+        datasets: [{
+          label: 'Market Share (%)',
+          data: adjustedShares.map(s => s.percentage),
+          backgroundColor: [
+            'rgba(147, 51, 234, 0.5)',  // Purple
+            'rgba(59, 130, 246, 0.5)',   // Blue
+            'rgba(16, 185, 129, 0.5)',   // Green
+            'rgba(245, 158, 11, 0.5)',   // Orange
+            'rgba(239, 68, 68, 0.5)',    // Red
+          ],
+          borderColor: [
+            'rgb(147, 51, 234)',
+            'rgb(59, 130, 246)',
+            'rgb(16, 185, 129)',
+            'rgb(245, 158, 11)',
+            'rgb(239, 68, 68)',
+          ],
+          borderWidth: 1,
+        }]
+      };
+
+      // Return all chart data
+      return { 
+        marketDistribution,
+        marketShares  // Add market shares to returned data
+      };
     } catch (error) {
       console.error('Error parsing market data:', error);
       return null;
@@ -233,7 +327,7 @@ export default function MarketAssessmentContent() {
 
       // Add market assessment content
       pdf.setFontSize(11);
-      const analysisLines = pdf.splitTextToSize(marketAssessment, pageWidth - (2 * margin));
+      const analysisLines = pdf.splitTextToSize(marketAnalysis, pageWidth - (2 * margin));
       for (const line of analysisLines) {
         if (currentY + 10 > pageHeight - margin) {
           pdf.addPage();
@@ -288,7 +382,7 @@ export default function MarketAssessmentContent() {
             <p className="text-gray-400 mt-2">Analyze market size, segments, and opportunities</p>
           </div>
           <div className="flex items-center space-x-4">
-            {marketAssessment && (
+            {marketAnalysis && (
               <button
                 onClick={exportToPDF}
                 className="bg-[#1D1D1F] hover:bg-[#2D2D2F] text-white px-4 py-2 rounded-xl flex items-center space-x-2 transition-all"
@@ -316,42 +410,37 @@ export default function MarketAssessmentContent() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 gap-6 mb-8">
-          {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {marketData && (
-            <div ref={chartsRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Market Size Growth Chart */}
-              <div className="bg-[#1D1D1F] p-6 rounded-2xl border border-purple-500/10">
-                <div className="h-[400px]">
-                  <Line 
-                    options={{
-                      ...chartOptions,
-                      maintainAspectRatio: false,
-                      aspectRatio: 1.5,
-                      plugins: {
-                        ...chartOptions.plugins,
-                        title: { ...chartOptions.plugins.title, text: 'Market Size Projection' }
-                      }
-                    }} 
-                    data={marketData.marketSizeGrowth}
-                  />
-                </div>
-              </div>
-
+            <div ref={chartsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Market Distribution Chart */}
               <div className="bg-[#1D1D1F] p-6 rounded-2xl border border-purple-500/10">
                 <div className="h-[400px]">
                   <Bar 
                     options={{
                       ...chartOptions,
-                      maintainAspectRatio: false,
-                      aspectRatio: 1.5,
                       plugins: {
                         ...chartOptions.plugins,
-                        title: { ...chartOptions.plugins.title, text: 'Regional Market Share' }
+                        title: { ...chartOptions.plugins.title, text: 'Regional Distribution' }
                       }
                     }} 
                     data={marketData.marketDistribution}
+                  />
+                </div>
+              </div>
+
+              {/* Market Share Chart */}
+              <div className="bg-[#1D1D1F] p-6 rounded-2xl border border-purple-500/10">
+                <div className="h-[400px]">
+                  <Pie 
+                    options={{
+                      ...chartOptions,
+                      plugins: {
+                        ...chartOptions.plugins,
+                        title: { ...chartOptions.plugins.title, text: 'Market Share Distribution' }
+                      }
+                    }} 
+                    data={marketData.marketShares}
                   />
                 </div>
               </div>
@@ -405,9 +494,9 @@ export default function MarketAssessmentContent() {
               <div className="flex justify-center items-center h-full">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
               </div>
-            ) : marketAssessment ? (
+            ) : marketAnalysis ? (
               <div className="prose text-gray-300 max-w-none">
-                <div className="whitespace-pre-wrap">{marketAssessment}</div>
+                <div className="whitespace-pre-wrap">{marketAnalysis}</div>
               </div>
             ) : (
               <div className="text-gray-500 italic">
