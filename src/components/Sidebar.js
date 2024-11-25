@@ -33,17 +33,7 @@ export default function Sidebar() {
 
   return (
     <div style={{ width: '256px', minHeight: '100vh', background: 'linear-gradient(to bottom, #1D1D1F, #131314)', color: 'white', padding: '24px', borderRight: '1px solid #1D1D1F', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}>
-      {/* Search Bar */}
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{ position: 'relative' }}>
-          <input
-            type="search"
-            placeholder="Search..."
-            style={{ width: '100%', background: '#1D1D1F', color: '#D1D5DB', borderRadius: '12px', paddingLeft: '16px', paddingRight: '32px', paddingTop: '10px', paddingBottom: '10px', fontSize: '14px', outline: 'none', border: 'none' }}
-          />
-          <span style={{ position: 'absolute', right: '12px', top: '10px', color: '#9CA3AF' }}>🔍</span>
-        </div>
-      </div>
+     
 
       {/* Navigation Sections */}
       {menuItems.map((section, index) => (
