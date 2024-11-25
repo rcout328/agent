@@ -40,6 +40,56 @@ export default function MarketTrendsContent() {
   const [mounted, setMounted] = useState(false);
   const [lastAnalyzedInput, setLastAnalyzedInput] = useState('');
   const chartsRef = useRef(null);
+  const [windowWidth, setWindowWidth] = useState(0);
+
+  // Add window resize listener
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    // Set initial width
+    setWindowWidth(window.innerWidth);
+
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Create a function to get font size based on window width
+  const getFontSize = (base, medium, large) => {
+    if (windowWidth < 640) return base;
+    if (windowWidth < 1024) return medium;
+    return large;
+  };
+
+  // Update chart options to use windowWidth state instead of direct window.innerWidth
+  const getChartOptions = (title) => ({
+    ...chartOptions,
+    maintainAspectRatio: false,
+    plugins: {
+      ...chartOptions.plugins,
+      title: {
+        ...chartOptions.plugins.title,
+        text: title,
+        font: {
+          size: getFontSize(12, 13, 14),
+          weight: 'bold'
+        }
+      },
+      legend: {
+        ...chartOptions.plugins.legend,
+        labels: {
+          ...chartOptions.plugins.legend.labels,
+          font: {
+            size: getFontSize(10, 11, 12)
+          }
+        }
+      }
+    }
+  });
 
   // Chart options with dark theme and responsive settings
   const chartOptions = {
@@ -329,30 +379,7 @@ export default function MarketTrendsContent() {
             <div className="bg-[#1D1D1F] p-3 sm:p-4 lg:p-6 rounded-2xl border border-purple-500/10">
               <div className="h-[250px] sm:h-[300px] lg:h-[400px]">
                 <Line 
-                  options={{
-                    ...chartOptions,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      ...chartOptions.plugins,
-                      title: {
-                        ...chartOptions.plugins.title,
-                        text: 'Market Growth Over Time',
-                        font: {
-                          size: window.innerWidth < 640 ? 12 : window.innerWidth < 1024 ? 13 : 14,
-                          weight: 'bold'
-                        }
-                      },
-                      legend: {
-                        ...chartOptions.plugins.legend,
-                        labels: {
-                          ...chartOptions.plugins.legend.labels,
-                          font: {
-                            size: window.innerWidth < 640 ? 10 : window.innerWidth < 1024 ? 11 : 12
-                          }
-                        }
-                      }
-                    }
-                  }} 
+                  options={getChartOptions('Market Growth Over Time')}
                   data={marketData.monthlyGrowth}
                 />
               </div>
@@ -362,30 +389,7 @@ export default function MarketTrendsContent() {
             <div className="bg-[#1D1D1F] p-3 sm:p-4 lg:p-6 rounded-2xl border border-purple-500/10">
               <div className="h-[250px] sm:h-[300px] lg:h-[400px]">
                 <Bar 
-                  options={{
-                    ...chartOptions,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      ...chartOptions.plugins,
-                      title: {
-                        ...chartOptions.plugins.title,
-                        text: 'Market Share Distribution',
-                        font: {
-                          size: window.innerWidth < 640 ? 12 : window.innerWidth < 1024 ? 13 : 14,
-                          weight: 'bold'
-                        }
-                      },
-                      legend: {
-                        ...chartOptions.plugins.legend,
-                        labels: {
-                          ...chartOptions.plugins.legend.labels,
-                          font: {
-                            size: window.innerWidth < 640 ? 10 : window.innerWidth < 1024 ? 11 : 12
-                          }
-                        }
-                      }
-                    }
-                  }} 
+                  options={getChartOptions('Market Share Distribution')}
                   data={marketData.marketSegments}
                 />
               </div>
