@@ -50,33 +50,62 @@ export default function MobileNav() {
   if (!isMounted) return null;
 
   return (
-    <div className="block md:hidden">
+    <div style={{ display: 'block', '@media (min-width: 768px)': { display: 'none' } }}>
       {/* Mobile Navigation Bar */}
-      <div className="fixed top-0 left-0 right-0 z-50">
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50 }}>
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-[#1D1D1F] border-b border-purple-500/10 px-4 py-3 flex items-center justify-between backdrop-blur-sm bg-opacity-80"
+          style={{ 
+            backgroundColor: '#1D1D1F',
+            borderBottom: '1px solid rgba(147, 51, 234, 0.1)',
+            padding: '0.75rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backdropFilter: 'blur(4px)',
+            backgroundColor: 'rgba(29, 29, 31, 0.8)'
+          }}
         >
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 rounded-lg bg-purple-600 text-white"
+            style={{
+              padding: '0.5rem',
+              borderRadius: '0.5rem',
+              backgroundColor: '#9333EA',
+              color: 'white'
+            }}
             aria-label="Toggle menu"
           >
-            <div className="w-6 h-5 flex flex-col justify-between">
-              <span className={`w-full h-0.5 bg-white rounded-full transform transition-all duration-300 ${
-                isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''
-              }`} />
-              <span className={`w-full h-0.5 bg-white rounded-full transition-all duration-300 ${
-                isMobileMenuOpen ? 'opacity-0' : 'opacity-100'
-              }`} />
-              <span className={`w-full h-0.5 bg-white rounded-full transform transition-all duration-300 ${
-                isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''
-              }`} />
+            <div style={{ width: '1.5rem', height: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <span style={{ 
+                width: '100%',
+                height: '2px',
+                backgroundColor: 'white',
+                borderRadius: '9999px',
+                transform: isMobileMenuOpen ? 'rotate(45deg) translateY(8px)' : 'none',
+                transition: 'all 0.3s'
+              }} />
+              <span style={{ 
+                width: '100%',
+                height: '2px',
+                backgroundColor: 'white',
+                borderRadius: '9999px',
+                opacity: isMobileMenuOpen ? 0 : 1,
+                transition: 'all 0.3s'
+              }} />
+              <span style={{ 
+                width: '100%',
+                height: '2px',
+                backgroundColor: 'white',
+                borderRadius: '9999px',
+                transform: isMobileMenuOpen ? 'rotate(-45deg) translateY(-8px)' : 'none',
+                transition: 'all 0.3s'
+              }} />
             </div>
           </button>
-          <div className="text-white font-semibold">Market Insight AI</div>
-          <div className="w-10"></div>
+          <div style={{ color: 'white', fontWeight: 600 }}>Market Insight AI</div>
+          <div style={{ width: '2.5rem' }}></div>
         </motion.div>
 
         {/* Mobile Menu Overlay */}
@@ -86,7 +115,13 @@ export default function MobileNav() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-md z-40"
+              style={{
+                position: 'fixed',
+                inset: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                backdropFilter: 'blur(4px)',
+                zIndex: 40
+              }}
               onClick={() => setIsMobileMenuOpen(false)}
             />
           )}
@@ -97,9 +132,19 @@ export default function MobileNav() {
           initial={{ y: "100%" }}
           animate={{ y: isMobileMenuOpen ? 0 : "100%" }}
           transition={{ type: "tween", duration: 0.3 }}
-          className="fixed top-[57px] left-0 right-0 bottom-0 bg-[#1D1D1F]/90 backdrop-blur-lg overflow-auto z-50"
+          style={{
+            position: 'fixed',
+            top: '57px',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(29, 29, 31, 0.9)',
+            backdropFilter: 'blur(16px)',
+            overflow: 'auto',
+            zIndex: 50
+          }}
         >
-          <div className="p-4 space-y-6">
+          <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {menuItems.map((section, index) => (
               <motion.div 
                 key={index}
@@ -107,10 +152,17 @@ export default function MobileNav() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <h2 className="text-xs text-gray-400 font-semibold tracking-wider mb-3 px-2">
+                <h2 style={{ 
+                  fontSize: '0.75rem',
+                  color: '#9CA3AF',
+                  fontWeight: 600,
+                  letterSpacing: '0.05em',
+                  marginBottom: '0.75rem',
+                  padding: '0 0.5rem'
+                }}>
                   {section.title}
                 </h2>
-                <nav className="space-y-2">
+                <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {section.items.map((item, itemIndex) => (
                     <motion.div
                       key={itemIndex}
@@ -121,16 +173,30 @@ export default function MobileNav() {
                       <Link
                         href={item.path}
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                          pathname === item.path
-                            ? 'bg-purple-600/80 backdrop-blur-sm text-white shadow-lg shadow-purple-500/20'
-                            : 'text-gray-400 hover:bg-[#2D2D2F]/80 hover:backdrop-blur-sm hover:text-white'
-                        }`}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.75rem',
+                          padding: '0.75rem 1rem',
+                          borderRadius: '0.75rem',
+                          transition: 'all 0.2s',
+                          backgroundColor: pathname === item.path ? 'rgba(147, 51, 234, 0.8)' : 'transparent',
+                          color: pathname === item.path ? 'white' : '#9CA3AF',
+                          boxShadow: pathname === item.path ? '0 10px 15px -3px rgba(147, 51, 234, 0.2)' : 'none',
+                          backdropFilter: pathname === item.path ? 'blur(4px)' : 'none'
+                        }}
                       >
-                        <span className="text-xl w-6 h-6 flex items-center justify-center">
+                        <span style={{ 
+                          fontSize: '1.25rem',
+                          width: '1.5rem',
+                          height: '1.5rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
                           {item.icon}
                         </span>
-                        <span className="text-sm font-medium">{item.name}</span>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{item.name}</span>
                       </Link>
                     </motion.div>
                   ))}
