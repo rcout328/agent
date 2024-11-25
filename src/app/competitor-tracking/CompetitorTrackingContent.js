@@ -43,11 +43,19 @@ export default function CompetitorTrackingContent() {
   const [error, setError] = useState(null);
   const [mounted, setMounted] = useState(false);
   const [lastAnalyzedInput, setLastAnalyzedInput] = useState('');
+  const [windowWidth, setWindowWidth] = useState(0);
   const router = useRouter();
 
   // Add refs for PDF content
   const chartsRef = useRef(null);
   const analysisRef = useRef(null);
+
+  useEffect(() => {
+    setWindowWidth(window.innerWidth);
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Chart options with dark theme and responsive settings
   const chartOptions = {
@@ -59,21 +67,21 @@ export default function CompetitorTrackingContent() {
         labels: {
           color: '#9ca3af',
           font: { 
-            size: window?.innerWidth < 768 ? 10 : 12 
+            size: windowWidth < 768 ? 10 : 12 
           },
-          padding: window?.innerWidth < 768 ? 10 : 20
+          padding: windowWidth < 768 ? 10 : 20
         }
       },
       title: {
         display: true,
         color: '#9ca3af',
         font: {
-          size: window?.innerWidth < 768 ? 14 : 16,
+          size: windowWidth < 768 ? 14 : 16,
           weight: 'bold'
         },
         padding: {
-          top: window?.innerWidth < 768 ? 5 : 10,
-          bottom: window?.innerWidth < 768 ? 15 : 30
+          top: windowWidth < 768 ? 5 : 10,
+          bottom: windowWidth < 768 ? 15 : 30
         }
       }
     },
@@ -84,25 +92,25 @@ export default function CompetitorTrackingContent() {
         ticks: { 
           color: '#9ca3af',
           backdropColor: 'transparent',
-          font: { size: window?.innerWidth < 768 ? 9 : 11 }
+          font: { size: windowWidth < 768 ? 9 : 11 }
         },
         pointLabels: { 
           color: '#9ca3af',
-          font: { size: window?.innerWidth < 768 ? 10 : 12 }
+          font: { size: windowWidth < 768 ? 10 : 12 }
         }
       },
       x: {
         grid: { color: 'rgba(75, 85, 99, 0.2)' },
         ticks: { 
           color: '#9ca3af',
-          font: { size: window?.innerWidth < 768 ? 9 : 11 }
+          font: { size: windowWidth < 768 ? 9 : 11 }
         }
       },
       y: {
         grid: { color: 'rgba(75, 85, 99, 0.2)' },
         ticks: { 
           color: '#9ca3af',
-          font: { size: window?.innerWidth < 768 ? 9 : 11 }
+          font: { size: windowWidth < 768 ? 9 : 11 }
         }
       }
     }
@@ -405,7 +413,7 @@ export default function CompetitorTrackingContent() {
                           ...chartOptions.plugins.title,
                           text: 'Market Share Distribution',
                           font: {
-                            size: window?.innerWidth < 768 ? 16 : 18,
+                            size: windowWidth < 768 ? 16 : 18,
                             weight: 'bold'
                           }
                         }
@@ -431,7 +439,7 @@ export default function CompetitorTrackingContent() {
                           ...chartOptions.plugins.title,
                           text: 'Competitive Strengths',
                           font: {
-                            size: window?.innerWidth < 768 ? 16 : 18,
+                            size: windowWidth < 768 ? 16 : 18,
                             weight: 'bold'
                           }
                         }
@@ -441,12 +449,12 @@ export default function CompetitorTrackingContent() {
                           ...chartOptions.scales.r,
                           pointLabels: {
                             ...chartOptions.scales.r.pointLabels,
-                            font: { size: window?.innerWidth < 768 ? 12 : 14 },
+                            font: { size: windowWidth < 768 ? 12 : 14 },
                             color: '#9ca3af'
                           },
                           ticks: {
                             ...chartOptions.scales.r.ticks,
-                            font: { size: window?.innerWidth < 768 ? 10 : 12 },
+                            font: { size: windowWidth < 768 ? 10 : 12 },
                             backdropPadding: 5
                           }
                         }
