@@ -4,7 +4,7 @@ export default function AgentChatInterface() {
   return (
     <div style={{ width: '100%', height: '100vh' }}>
       <iframe
-        src="https://varun324242-agent.hf.space"
+        src="https://varun324242-agens.hf.space"
         style={{ 
           width: '100%', 
           height: '100%', 
