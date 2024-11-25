@@ -169,7 +169,7 @@ export default function MarketTrendsContent() {
       const response = await callGroqApi([
         {
           role: "system",
-          content: `You are a market analysis expert. Analyze market trends and provide detailed insights with specific numbers and percentages that can be visualized. Include monthly growth rates and market segment distributions in your analysis.`
+          content: `You are a market analysis expert. Analyze market trends and provide detailed insights with specific numbers and percentages that can be visualized. Include monthly growth rates and market segment distributions in your analysis`
         },
         {
           role: "user",
