@@ -138,17 +138,17 @@ export default function ComplianceCheckContent() {
   if (!mounted) return null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 md:p-8">
+    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-3 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <header className="text-center mb-8 relative">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+        <header className="text-center mb-6 sm:mb-8 relative">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
             Compliance Check Analysis
           </h1>
-          <div className="absolute right-0 top-0 flex space-x-2">
+          <div className="flex justify-center sm:absolute sm:right-0 sm:top-0 space-x-2 mt-4 sm:mt-0">
             {complianceAnalysis && (
               <button
                 onClick={generatePDF}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center space-x-2 text-sm sm:text-base"
               >
                 <span>📥</span>
                 <span>Export PDF</span>
@@ -158,21 +158,21 @@ export default function ComplianceCheckContent() {
           </div>
         </header>
 
-        <div className="mb-8">
-          <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-            <div className="mb-4">
+        <div className="mb-6 sm:mb-8">
+          <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-2 sm:px-4">
+            <div className="mb-3 sm:mb-4">
               <textarea
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 placeholder="Enter your business details for compliance analysis..."
-                className="w-full p-4 border rounded-lg focus:ring-2 focus:ring-blue-500 h-32 resize-none text-black"
+                className="w-full p-3 sm:p-4 border rounded-lg focus:ring-2 focus:ring-blue-500 h-24 sm:h-32 resize-none text-black text-sm sm:text-base"
                 disabled={isLoading}
               />
             </div>
             <button
               type="submit"
               disabled={isLoading || !userInput.trim()}
-              className={`w-full p-4 rounded-lg font-medium transition-colors ${
+              className={`w-full py-3 sm:py-4 px-4 rounded-lg font-medium transition-colors text-sm sm:text-base ${
                 !isLoading && userInput.trim()
                   ? 'bg-blue-500 hover:bg-blue-600 text-white'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -183,25 +183,27 @@ export default function ComplianceCheckContent() {
           </form>
         </div>
 
-        <div className="grid md:grid-cols-1 gap-6">
-          <div className="bg-white rounded-xl shadow-xl p-6">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-700 flex items-center">
+        <div className="grid gap-4 sm:gap-6">
+          <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6">
+            <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-gray-700 flex items-center">
               <span className="mr-2">📋</span> Compliance Analysis
             </h2>
-            <div className="bg-gray-50 rounded-lg p-4 min-h-[300px]">
+            <div className="bg-gray-50 rounded-lg p-3 sm:p-4 min-h-[250px] sm:min-h-[300px]">
               {error ? (
-                <div className="text-red-500">
+                <div className="text-red-500 text-sm sm:text-base">
                   {error}
-                  <p className="text-sm mt-2">Please try refreshing the page or contact support if the problem persists.</p>
+                  <p className="text-xs sm:text-sm mt-2">Please try refreshing the page or contact support if the problem persists.</p>
                 </div>
               ) : isLoading ? (
                 <div className="flex justify-center items-center h-full">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-gray-900"></div>
                 </div>
               ) : complianceAnalysis ? (
-                <div className="prose text-black whitespace-pre-wrap">{complianceAnalysis}</div>
+                <div className="prose text-black whitespace-pre-wrap text-sm sm:text-base max-w-none">
+                  {complianceAnalysis}
+                </div>
               ) : (
-                <div className="text-gray-500 italic">
+                <div className="text-gray-500 italic text-sm sm:text-base">
                   Compliance analysis results will appear here...
                 </div>
               )}

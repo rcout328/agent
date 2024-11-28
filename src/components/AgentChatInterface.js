@@ -2,40 +2,10 @@
 
 export default function AgentChatInterface() {
   return (
-    <div style={{ 
-      width: '100%',
-      height: '100vh',
-      maxWidth: '100%',
-      margin: '0 auto',
-      padding: '0',
-      overflow: 'hidden',
-      position: 'relative'
-    }}>
+    <div className="w-full h-screen max-w-full m-0 p-0 overflow-hidden relative">
       <iframe
         src="https://varun324242-agens.hf.space"
-        style={{ 
-          width: '100%',
-          height: '100%',
-          border: 'none',
-          background: 'transparent',
-          position: 'absolute',
-          top: '0',
-          left: '0',
-          right: '0',
-          bottom: '0',
-          margin: '0 auto',
-          minHeight: '100%',
-          minWidth: '100%',
-          '@media (max-width: 768px)': {
-            height: 'calc(100vh - 56px)' // Adjust for mobile header
-          },
-          '@media (min-width: 769px) and (max-width: 1024px)': {
-            height: 'calc(100vh - 64px)' // Adjust for tablet header
-          },
-          '@media (min-width: 1025px)': {
-            maxWidth: '1440px' // Max width on large screens
-          }
-        }}
+        className="w-full h-[calc(100vh-56px)] sm:h-[calc(100vh-64px)] lg:h-full border-none bg-transparent absolute top-0 left-0 right-0 bottom-0 m-auto min-h-full min-w-full"
         title="AI Agent Interface"
       />
     </div>
